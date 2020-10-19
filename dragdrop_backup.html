@@ -1,0 +1,196 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+        <style>
+			.handle {
+				border: 1px solid black;
+				position: absolute;
+				background-color: white;
+				display: none;
+			}
+			#topLeft {
+				top: 0px;
+				left: 0px;
+			}
+			#topRight {
+				top: 0px;
+				right: 0px;
+			}
+			#bottomRight {
+				bottom: 0px;
+				right: 0px;
+			}
+			#bottomLeft {
+				bottom: 0px;
+				left: 0px;
+			}
+			#container {
+				position:absolute;
+				width: auto;
+				height: auto;
+				display: none;
+			}
+        </style>
+</head>
+<body>
+
+<p id="log" style="color: black; word-break: break-all"></p>
+
+<div id="container">
+<img id="myImage">
+<div id="bottomRight" class="handle"></div>
+</div>
+<script>
+$(function() {
+
+	window.onmessage = (event) => {
+		if (event.data) {
+			const message = event.data;
+			switch (message.action) {
+			case "image":
+				setImage(message.image);
+				break;
+			}
+		}
+	};
+	
+	const BOTTOM_RIGHT = 0;
+	const BOTTOM_LEFT = 1;
+	const TOP_LEFT = 2;
+	const TOP_RIGHT = 3;
+	
+	const cursorTypes = [];
+	cursorTypes[BOTTOM_RIGHT] = "se-resize";
+	cursorTypes[BOTTOM_LEFT] = "sw-resize";
+	cursorTypes[TOP_LEFT] = "nw-resize";
+	cursorTypes[TOP_RIGHT] = "ne-resize";
+	
+	const handles = [
+		{
+			type: BOTTOM_RIGHT,
+			cursor: cursorTypes[BOTTOM_RIGHT],
+			selector: "#bottomRight",
+			update: function (deltaX, deltaY, element) {
+				const elementWidth = parseInt(element.css('width'), 10)
+				//log(elementWidth + " + " + deltaX + " = " + (elementWidth + deltaX))
+				element.css({
+					width: elementWidth + deltaX
+				});
+			}
+		}
+	];
+
+	function log(msg) {
+		$("#log").append("<span>&nbsp;" + msg + "</span>");
+	}
+
+	const initialImageWidth = 300;
+	const containerPadding = 5;
+	const handleSize = 10;
+
+	const shadowSize = 5;
+	let mouseDown = false;
+	let handleType = 0;
+	let previousDragX = 0;
+	let previousDragY = 0;
+	
+	function setImage(imageUrl) {
+		$("#myImage").attr("src", imageUrl);
+		if ($("#container").css("display") === "none") {
+			// First time = set image position at the center
+			const availableWidth = $(document).width();
+			const imageWidth = availableWidth / 3;
+			$("#myImage").css({
+				width: imageWidth
+			})
+			const initialLeft = (availableWidth - imageWidth) / 2;
+			$("#container").css({
+				top: 100,
+				left: initialLeft,
+				display: "block"
+			});
+		}
+	}
+	function showHandles(show) {
+		const displayValue = show === true ? "block" : "none";
+		handles.forEach(handle => $(handle.selector).css("display", displayValue));
+	}
+	function startDrag(event, _handleType) {
+		mouseDown = true;
+		$("body").css("cursor", handles[_handleType].cursor);
+		handleType = _handleType;
+		previousDragX = event.pageX;
+		previousDragY = event.pageY;
+		//log(previousDragX)
+	}
+	function getPropAsInt(elementSelector, prop) {
+		return parseInt($(elementSelector).css(prop), 10);
+	}
+
+	// Initialize size and positions
+	$(".handle").css({
+		width: handleSize,
+		height: handleSize
+	})
+	$("#container").css("padding", containerPadding + "px");
+
+	// Configure events
+	$("#container").mouseover(function() {
+		showHandles(true);
+	});
+	$("#container").mousemove(function() {
+		showHandles(true);
+	});
+	$("#container").mouseout(function() {
+		if (mouseDown === false) {			
+			showHandles(false);
+		}
+	});
+	$("body").mousemove(function(event) {
+		if (mouseDown === true) {
+			const deltaX = event.pageX - previousDragX;
+			const deltaY = event.pageY - previousDragY;
+			//log("delta = " + deltaX)
+			handles[handleType].update(deltaX, deltaY, $("#myImage"));
+
+			previousDragX = event.pageX;
+			previousDragY = event.pageY;
+		}
+	});
+	$("body").mouseup(function() {
+		if (mouseDown === true) {
+			mouseDown = false;
+			showHandles(false);
+			$(this).css("cursor", "default");
+		}
+	});
+			
+	$("#myImage").css({
+		"cursor": "move",
+		"box-shadow": shadowSize + "px " + shadowSize + "px " + shadowSize + "px #999999",
+		"border": "2px solid white"
+	});
+	// Handle Cursor types
+	handles.forEach(handle => $(handle.selector).css("cursor", handle.cursor))
+	// Handle mousedown
+	handles.forEach(handle => {
+		$(handle.selector).mousedown(function(event) {
+			startDrag(event, handle.type);
+			return false;
+		})
+	})
+	
+	// Drag options
+    $("#container").draggable({
+		handle: "#myImage",
+		cancel: "#bottomRight",
+		containment: "parent"
+    });
+		
+	//setImage("DSC_2370-Modifier.jpg");
+});
+</script>
+</body>
+</html>

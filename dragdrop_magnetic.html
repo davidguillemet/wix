@@ -1,0 +1,413 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<style>
+	body {
+		overflow: hidden;
+	}
+	.handle {
+		position: absolute;
+		bottom: 0px;
+		right: 0px;
+		border: 1px solid black;
+		background-color: white;
+		cursor: se-resize;
+		display: none;
+	}
+	.selection {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		cursor: pointer;
+		display: none;
+	}
+	.closeButton {
+		position: absolute;
+		top: 0px;
+		right: 0px;
+		border: 1px solid black;
+		background-color: white;
+		cursor: pointer;
+		display: none;
+	}
+	.container {
+		position: absolute;
+		width: auto;
+		height: auto;
+		display: none;
+	}
+	.close {
+		position: absolute;
+		right: 0px;
+		top: -1px;
+		width: 11px;
+		height: 11px;
+		opacity: 0.5;
+	}
+	.close:hover {
+		opacity: 1;
+	}
+	.close:before, .close:after {
+		position: absolute;
+		left: 5px;
+		content: ' ';
+		height: 12px;
+		width: 1px;
+		background-color: #333;
+	}
+	.close:before {
+		transform: rotate(45deg);
+	}
+	.close:after {
+		transform: rotate(-45deg);
+	}
+</style>
+<script>
+$(document).ready(function() {
+
+	let deviceType = 'desktop';
+	
+	window.onmessage = (event) => {
+		if (event.data) {
+			const message = event.data;
+			switch (message.action) {
+			case "set":
+				setImage(message.image);
+				break;
+			case "add":
+				addImage();
+				setImage(message.image);
+				break;
+			case "device":
+				deviceType = message.device;
+				break
+			case "border":
+				setBorder(message.property, message.value);
+				break
+			case "removeAll":
+				removeAll();
+				break;
+			}
+		}
+	};
+
+	function sendMessage(msg) {
+		window.parent.postMessage(msg, "*");
+	}
+	
+	function sendUpdateMessage(count) {
+		sendMessage({
+			action: "update",
+			count: count
+		});
+	}
+			
+	function log(msg) {
+		$("#log").append("<span>&nbsp;" + msg + "</span>");
+	}
+
+	const initialImageWidth = 300;
+	const handleSize = 10;
+	const containerPadding = 5;
+	const borderProperties = [];
+	borderProperties['border-color'] = 'white';
+	borderProperties['border-width'] = '2px';
+	const activeColor = "#66f542";
+	const inactiveColor = "#666"
+
+	const shadowSize = 5;
+	
+	let currentImage = -1;
+	let imageResizing = -1;
+	let previousDragX = 0;
+	let previousDragY = 0;
+	
+	function getContainerSelector(imageIndex) {
+		return `#container${imageIndex}`;
+	}
+	function getHandleSelector(imageIndex) {
+		return `#handle${imageIndex}`;
+	}
+	function getImageSelector(imageIndex) {
+		return `#image${imageIndex}`;
+	}
+	function getCloseSelector(imageIndex) {
+		return `#close${imageIndex}`;
+	}
+	function getSelectionSelector(imageIndex) {
+		return `#selection${imageIndex}`;
+	}
+
+	function getFreeIndex() {
+		let index = 0;
+		while ($(getContainerSelector(index)).length > 0) {
+			index++;
+		}
+		return index;
+	}
+	
+	function getImageCount() {
+		return $("div[class*='container']").length;
+	}
+
+	function getFirstValidIndex() {
+		if (getImageCount() === 0) {
+			return -1;
+		}
+		let index = 0;
+		while ($(getContainerSelector(index)).length === 0) {
+			index++;
+		}
+		return index;
+	}
+	
+	function setActiveImage(imageIndex) {
+		// Remove all seelctions
+		$(".selection").css({
+			"background-color": inactiveColor
+		})
+
+		$(".container").css({
+			"z-index": 0
+		})
+		
+		if (imageIndex === -1) {
+			return;
+		}
+		
+		// Set active selection
+		$(getSelectionSelector(imageIndex)).css({
+			"background-color": activeColor
+		});
+		$(getContainerSelector(imageIndex)).css({
+			"z-index": 10
+		});
+	}
+
+	function setBorder(property, value) {
+		borderProperties[property] = value;
+		$("[id^=image]").css(property, value);
+	}
+	
+	function removeAll() {
+		let index = 0;
+		while (getImageCount() > 0) {
+			if ($(getContainerSelector(index)).length > 0) {
+				removeImage(index);
+			}
+			index++;
+		}
+	}
+	
+	function removeImage(imageIndex) {
+		const containerSelector = getContainerSelector(imageIndex);
+		const imageSelector = getImageSelector(imageIndex);
+		const handleSelector = getHandleSelector(imageIndex);
+		const closeSelector = getCloseSelector(imageIndex);
+		const selectionSelector = getSelectionSelector(imageIndex);
+		$(handleSelector).off();
+		$(closeSelector).off();
+		$(selectionSelector).off();
+		$(imageSelector).off();
+		$(containerSelector).off();
+		$(containerSelector).remove();
+	}
+
+	function addImage() {		
+		const imageIndex = getFreeIndex();
+		const containerId = `container${imageIndex}`;
+		const imageId = `image${imageIndex}`;
+		const handleId = `handle${imageIndex}`;
+		const closeId = `close${imageIndex}`;
+		const selectionId = `selection${imageIndex}`;
+		
+		const image = `<img id="${imageId}">`;
+		const resizeHandle = `<div class="handle" id="${handleId}"></div>`;
+		const closeButton = `<div class="closeButton" id="${closeId}"><div class="close"></div></div>`;
+		const selectionIndicator = `<div class="selection" id="${selectionId}"></div>`;
+		
+		const newImage = $("body").add(`<div class="container" id="${containerId}">${image}${resizeHandle}${closeButton}${selectionIndicator}</div>`);
+		$("body").append(newImage);
+
+		const containerSelector = getContainerSelector(imageIndex);
+		const handleSelector = getHandleSelector(imageIndex);
+		const imageSelector = getImageSelector(imageIndex);
+		const closeSelector = getCloseSelector(imageIndex);
+		const selectionSelector = getSelectionSelector(imageIndex);
+		
+		// Initialize size and positions
+		$(handleSelector).css({
+			width: handleSize,
+			height: handleSize
+		})
+		$(closeSelector).css({
+			width: handleSize,
+			height: handleSize
+		})
+		$(selectionSelector).css({
+			width: handleSize + 2,
+			height: handleSize + 2,
+			"border-radius": handleSize / 2,
+			"background-color": inactiveColor
+		})
+		$(containerSelector).css("padding", containerPadding + "px");
+
+		// Configure events
+		let _lastEventTimestamp;
+		if (deviceType === 'mobile') {
+			$(imageSelector).on('vclick', function(event) {
+				if (event.timeStamp === _lastEventTimestamp) return;
+				toggleElements([handleSelector, closeSelector, selectionSelector]);
+				_lastEventTimestamp = event.timeStamp;
+			});
+		} else {
+			$(containerSelector).on('mouseover', function() {
+				showElements(true, [handleSelector, closeSelector, selectionSelector]);
+			});
+			$(containerSelector).on('mousemove', function() {
+				showElements(true, [handleSelector, closeSelector, selectionSelector]);
+			});
+			$(containerSelector).on('mouseout', function() {
+				if (imageResizing === -1) {			
+					showElements(false, [handleSelector, closeSelector, selectionSelector]);
+				}
+			});
+		}
+		
+		$(imageSelector).css({
+			"cursor": "move",
+			"box-shadow": shadowSize + "px " + shadowSize + "px " + shadowSize + "px #999999",
+			"border-width": borderProperties["border-width"],
+			"border-color": borderProperties["border-color"],
+			"border-style": "solid"
+		});
+		
+		// Handle mousedown
+		$(handleSelector).on('vmousedown', function(event) {
+			startResize(event, imageIndex);
+			// Error In case of mobile:
+			// Unable to preventDefault inside passive event listener
+			if (deviceType === 'desktop') return false;
+		});
+		
+		// Close image
+		$(closeSelector).on('vclick', function(event) {
+			//$(containerSelector).remove();
+			removeImage(imageIndex);
+			sendUpdateMessage(getImageCount());
+			// Update currentImage
+			if (currentImage === imageIndex) {
+				currentImage = getFirstValidIndex();
+				setActiveImage(currentImage);
+			}
+		})
+		
+		// Set image as active
+		$(selectionSelector).on('vclick', function(event) {
+			setActiveImage(imageIndex);
+			currentImage = imageIndex;
+		})
+	
+		// Drag options
+	    $(containerSelector).draggable({
+			handle: imageSelector,
+			cancel: handleSelector,
+			containment: "parent"
+	    });
+
+		const availableWidth = $(document).width();
+		const imageWidth = availableWidth / 3;
+		$(imageSelector).css({
+			width: imageWidth
+		})
+		const initialLeft = (availableWidth - imageWidth) / 2;
+		$(containerSelector).css({
+			top: 100,
+			left: initialLeft,
+			display: "block"
+		});
+
+		currentImage = imageIndex;
+		setActiveImage(currentImage);
+		sendUpdateMessage(getImageCount());
+	}
+	
+	function setImage(imageUrl) {
+		if (currentImage === -1) {
+			addImage();
+		}
+		$(getImageSelector(currentImage)).attr("src", imageUrl);
+	}
+
+	function showElement(show, elementSelector) {
+		$(elementSelector).css("display", show === true ? "block" : "none");
+	}
+
+	function showElements(show, selectors) {
+		selectors.forEach(s => showElement(show, s));
+	}
+	
+	function toggleElements(selectors) {
+		selectors.forEach(selector => {
+			const elmt = $(selector);
+			const displ = elmt.css('display');
+			if (displ === 'block') {
+				elmt.css('display', 'none');
+			} else {
+				elmt.css('display', 'block');
+			}
+		})
+	}
+
+	function startResize(event, imageIndex) {
+		imageResizing = imageIndex;
+		$("body").css("cursor", "se-resize");
+		previousDragX = event.pageX;
+		previousDragY = event.pageY;
+	}
+
+	function getPropAsInt(elementSelector, prop) {
+		return parseInt($(elementSelector).css(prop), 10);
+	}
+
+	$("body").on('vmousemove', function(event) {
+		if (imageResizing >= 0) {
+			const deltaX = event.pageX - previousDragX;
+			const deltaY = event.pageY - previousDragY;
+
+			const element = $(getImageSelector(imageResizing));
+			const elementWidth = parseInt(element.css('width'), 10)
+			element.css({
+				width: elementWidth + deltaX
+			});
+			
+			previousDragX = event.pageX;
+			previousDragY = event.pageY;
+		}
+	});
+
+	$("body").on('vmouseup', function() {
+		if (imageResizing >= 0) {
+			showElement(false, [getHandleSelector(imageResizing), getCloseSelector(imageResizing)]);
+			$(this).css("cursor", "default");
+			imageResizing = -1;
+		}
+	});
+	
+	$("body, body div:first-child").css({ "background-color" : "transparent" });
+	sendMessage({
+		action: 'ready'
+	})	
+});
+</script>
+</head>
+<body>
+
+<p id="log" style="color: black; word-break: break-all"></p>
+
+</body>
+</html>
