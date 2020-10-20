@@ -194,6 +194,8 @@ $(document).ready(function() {
 			"z-index": 0
 		})
 		
+		currentImage = imageIndex;
+
 		if (imageIndex === -1) {
 			return;
 		}
@@ -222,7 +224,6 @@ $(document).ready(function() {
 			}
 			_indicatorsTimer = setTimeout(hideActiveIndicators, 10000);
 		}
-		currentImage = imageIndex;
 	}
 
 	function setBorder(property, value) {
