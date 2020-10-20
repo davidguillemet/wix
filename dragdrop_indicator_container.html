@@ -75,6 +75,7 @@
 $(document).ready(function() {
 
 	let deviceType = 'desktop';
+	let _indicatorsTimer = null;
 	
 	window.onmessage = (event) => {
 		if (event.data) {
@@ -179,6 +180,10 @@ $(document).ready(function() {
 		return index;
 	}
 	
+	function hideActiveIndicators() {
+		showElement(false, getIndicatorContainerSelector(currentImage));
+	}
+
 	function setActiveImage(imageIndex) {
 		// Remove all seelctions
 		$(".selection").css({
@@ -208,10 +213,14 @@ $(document).ready(function() {
 			"z-index": 10
 		});
 		if (deviceType === 'mobile') {
-			// Hide all indicators
+			// Show Active indicators for 10 Seconds
 			$(getIndicatorContainerSelector(imageIndex)).css({
 				display: "block"
 			})
+			if (_indicatorsTimer !== null) {
+				clearTimeout(_indicatorsTimer);
+			}
+			_indicatorsTimer = setTimeout(hideActiveIndicators, 10000);
 		}
 		currentImage = imageIndex;
 	}
