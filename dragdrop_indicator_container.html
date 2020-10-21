@@ -7,7 +7,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js"></script>
 <style>
 	body {
-		overflow: hidden;
+		overflow: hidden!important;
 	}
 	.handle {
 		position: absolute;
@@ -70,12 +70,125 @@
 	.close:after {
 		transform: rotate(-45deg);
 	}
+    
+    #toolbarcontainer {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        bottom: -24px;
+        right: 10px;
+    }
+    .toolbarbutton, .toolbartoggle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0px;
+        left: 0px;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 2px 2px 3px #999;
+        border: 1px solid #ccc;
+        overflow: hidden;
+        background-color: #fff;
+    }
+
+    .toolbarbutton {
+        opacity: 0;
+    }
+    .disabled {
+        cursor: not-allowed;
+        background-color: #ddd;
+    }
+
+    .toolbartoggle {
+        display: inline-block;
+    }
+    .bar1, .bar2, .bar3 {
+        width: 15px;
+        height: 2px;
+        background-color: #666;
+        margin: 3px auto 0px auto;
+        transition: 0.4s;
+    }
+    .open > .bar2 {
+        opacity: 0;
+    }
+    .open > .bar1 {
+        -webkit-transform: rotate(-45deg) translate(-4px, 4px);
+        transform: rotate(-45deg) translate(-4px, 4px);
+    }
+    .open > .bar3 {
+        -webkit-transform: rotate(45deg) translate(-3px, -3px);
+        transform: rotate(45deg) translate(-3px, -3px);
+    }
+    #togglebutton > div:first-child {
+        margin-top: 6px;
+    }
+    #buttondesc {
+        position: absolute;
+        right: 0px;
+        border: 1px solid black;
+        background-color: #e6f2ff;
+        border-radius: 3px;
+        opacity: 0;
+        padding: 2px 10px 2px 10px;
+        bottom: 30px;
+    }
+    #buttondesc > span {
+        font-family: Arial;
+    }
 </style>
 <script>
 $(document).ready(function() {
 
 	let deviceType = 'desktop';
 	let _indicatorsTimer = null;
+
+	const actions = [];
+	let actionPtr = -1;
+
+	const features = [
+		{
+			selector: "#exportbutton",
+			desc: "Exporter le projet",
+			action: function () {
+				exportProject();
+			},
+			isActive: function () {
+				return getImageCount() > 0;
+			}
+		},
+		{
+			selector: "#resetbutton",
+			desc: "Réinitialiser le projet",
+			action: function () {
+				removeAll();
+			},
+			isActive: function () {
+				return getImageCount() > 0;
+			}
+		}/*,
+		{
+			selector: "#undobutton",
+			desc: "Annuler la dernière action",
+			action: function () {
+				undo();
+			},
+			isActive: function () {
+				return actionPtr >= 0;
+			}
+		},
+		{
+			selector: "#redobutton",
+			desc: "Restaurer la dernière action",
+			action: function () {
+				redo();
+			},
+			isActive: function () {
+				return actions.length > 0 && actionPtr < actions.length - 1;
+			}
+		}*/
+	];
 	
 	window.onmessage = (event) => {
 		if (event.data) {
@@ -112,6 +225,9 @@ $(document).ready(function() {
 	}
 	
 	function sendUpdateMessage(count) {
+		features.forEach(feature => {
+			activateFunction(feature.selector, feature.isActive());
+		});
 		sendMessage({
 			action: "update",
 			count: count
@@ -546,9 +662,104 @@ $(document).ready(function() {
 		}
 		resizeTimer = setTimeout(resizeAll, 200);
 	});
+    
+    // Toolbar
+    const toolbarButtonSpacing = 10;
+    const singleButtonOffset = 24 + toolbarButtonSpacing;
+    const collapseTimeout = 5000;
+    const toolbarAnimationDuration = 200;
+    
+    $("body").on('mouseenter', function() {
+		$("#toolbarcontainer").stop();
+        $("#toolbarcontainer").animate({ bottom: 10 }, toolbarAnimationDuration);
+    });
+    $("body").on('mouseleave', function() {
+        collapseToolbar();
+		$("#toolbarcontainer").stop();
+        $("#toolbarcontainer").animate({ bottom: -24 }, toolbarAnimationDuration);
+    });
+    $("#togglebutton").on('vclick', function() { 
+        toggleToolbar();
+    });
+    
+    let _buttonTimer = null;
+    $(".toolbarbutton").on('mouseleave', function() {
+        _buttonTimer = setTimeout(collapseToolbar, collapseTimeout);
+    });
+    $(".toolbarbutton").on('mouseenter', function() {
+        clearTimeout(_buttonTimer);
+    });
+
+    function toggleToolbar() {
+        if (isToolbarExpanded()) {   
+            collapseToolbar();
+        } else {
+            expandToolbar();
+        }
+    }
+    function isToolbarExpanded() {
+        return $("#toolbarcontainer").attr('expanded') === 'true';
+    }
+    function setToolbarExpanded(expanded) {
+        $("#toolbarcontainer").attr('expanded', expanded);
+    }
+    function expandToolbar() {
+        $(".toolbarbutton").each(function (index) {
+            $(this).animate({
+                left: - singleButtonOffset*(index+1),
+                opacity: 1
+            }, toolbarAnimationDuration);
+        });
+        $("#togglebutton").addClass("open");
+        setToolbarExpanded(true);
+        clearTimeout(_buttonTimer);
+        _buttonTimer = setTimeout(collapseToolbar, collapseTimeout);
+    }
+    function collapseToolbar() {
+        $(".toolbarbutton").each(function (index) {
+            $(this).animate({ left: 0, opacity: 0 }, toolbarAnimationDuration);
+        });
+        $("#togglebutton").removeClass("open");
+        setToolbarExpanded(false);
+        clearTimeout(_buttonTimer);
+    }
+    function activateFunction(functionSelector, enable) {
+        const button = $(functionSelector);
+        if (enable === true) {
+            button.removeClass("disabled");
+        } else {
+            button.addClass("disabled");
+        }
+    }
+
+	const toggleButton = $("#togglebutton");
+	features.forEach(feature => {
+
+		const featureButtonHtml = `<div id="${feature.selector.substring(1)}" class="toolbarbutton disabled" data-desc="${feature.desc}"></div>`;
+		$(featureButtonHtml).insertBefore(toggleButton);
+
+		const element = $(feature.selector);
+        element.on('mouseenter', function() {
+            $("#buttondesc > span:first-child").text($(this).attr('data-desc'));
+            $("#buttondesc").stop(); // Stop possible current animation
+            $("#buttondesc").animate({ opacity: 1 }, toolbarAnimationDuration);
+        });
+        element.on('mouseleave', function() {
+            $("#buttondesc").stop(); // Stop possible current animation
+            $("#buttondesc").animate({ opacity: 0 }, toolbarAnimationDuration);
+        });
+		element.on('vclick', function () {
+			if (!$(this).hasClass('disbladed')) {
+				feature.action();
+			}
+		});
+	});
 
 	// Remove jQuery mobile background color 
-	$("body, body div:first-child").css({ "background-color" : "transparent" });	
+	$("body, body > div:first-child").css({
+        "background-color" : "transparent",
+        "overflow": "hidden"
+    });
 
 	sendMessage({
 		action: 'ready'
@@ -559,6 +770,16 @@ $(document).ready(function() {
 <body>
 
 <p id="log" style="color: black; word-break: break-all"></p>
+
+<div id="toolbarcontainer" expanded="false">
+	<div id="buttondesc"><span style="white-space: nowrap;"></span></div>
+	<!-- Feature buttons will be inserted here -->
+    <div id="togglebutton" class="toolbartoggle">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+    </div>
+</div>
 
 </body>
 </html>
