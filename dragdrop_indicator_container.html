@@ -73,9 +73,9 @@
     
     #toolbarcontainer {
         position: absolute;
-        width: 24px;
-        height: 24px;
-        bottom: -24px;
+        width: 28px;
+        height: 28px;
+        bottom: -28px;
         right: 10px;
 		z-index: 9999;
     }
@@ -85,7 +85,7 @@
         height: 100%;
         top: 0px;
         left: 0px;
-        border-radius: 12px;
+        border-radius: 14px;
         cursor: pointer;
         box-shadow: 2px 2px 3px #999;
         border: 1px solid #ccc;
@@ -125,7 +125,7 @@
         transform: rotate(45deg) translate(-3px, -3px);
     }
     #togglebutton > div:first-child {
-        margin-top: 6px;
+        margin-top: 8px;
     }
     #buttondesc {
         position: absolute;
@@ -135,7 +135,7 @@
 		border-radius: 3px;
         opacity: 0;
         padding: 2px 10px 2px 10px;
-        bottom: 30px;
+        bottom: 34px;
     }
     #buttondesc > span {
         font-family: Arial;
@@ -711,7 +711,7 @@ $(document).ready(function() {
 	});
     
     // Toolbar
-    const toolbarButtonSpacing = 10;
+    const toolbarButtonSpacing = 15;
     const singleButtonOffset = 24 + toolbarButtonSpacing;
     const collapseTimeout = 5000;
     const toolbarAnimationDuration = 200;
@@ -763,7 +763,7 @@ $(document).ready(function() {
 	function collapseAndHideToolbar() {
         collapseToolbar();
 		$("#toolbarcontainer").stop();
-        $("#toolbarcontainer").animate({ bottom: -24 }, toolbarAnimationDuration);
+        $("#toolbarcontainer").animate({ bottom: -28 }, toolbarAnimationDuration);
 	}
 
     function toggleToolbar() {
