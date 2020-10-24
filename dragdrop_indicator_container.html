@@ -182,7 +182,7 @@
 <script>
 $(document).ready(function() {
 
-	let deviceType = 'desktop';
+	let _deviceType = 'desktop';
 	let _indicatorsTimer = null;
 
 	const actions = [];
@@ -210,8 +210,8 @@ $(document).ready(function() {
 			isActive: function () {
 				return getImageCount() > 0;
 			}
-		}/*,
-		{
+		},
+		/*{
 			selector: "#redobutton",
 			desc: "Restaurer la dernière action",
 			class: "redoIcon",
@@ -247,7 +247,7 @@ $(document).ready(function() {
 				setImage(message.image);
 				break;
 			case "device":
-				deviceType = message.device;
+				initDeviceType(message.device);
 				break
 			case "border":
 				setBorder(message.property, message.value);
@@ -365,7 +365,7 @@ $(document).ready(function() {
 			return;
 		}
 		
-		if (deviceType === 'mobile') {
+		if (_deviceType === 'mobile') {
 			// Hide all indicators
 			$(".indicatorContainer").css({
 				display: "none"
@@ -379,7 +379,7 @@ $(document).ready(function() {
 		$(getContainerSelector(imageIndex)).css({
 			"z-index": 10
 		});
-		if (deviceType === 'mobile') {
+		if (_deviceType === 'mobile') {
 			// Show Active indicators for 10 Seconds
 			$(getIndicatorContainerSelector(imageIndex)).css({
 				display: "block"
@@ -479,6 +479,15 @@ $(document).ready(function() {
 		}
 	}
 
+	let _lastEventTimestamp;
+	function patchedClickHandler(f) {
+		return function (event) {
+			if (event.timeStamp === _lastEventTimestamp) return;
+			f.bind(this)(); // The initial function must access the clicked element through 'this'
+			_lastEventTimestamp = event.timeStamp;
+		};
+	}
+
 	function addImage(imageData) {		
 		const imageIndex = getFreeIndex();
 		const containerId = `container${imageIndex}`;
@@ -518,17 +527,15 @@ $(document).ready(function() {
 		$(containerSelector).css("padding", containerPadding + "px");
 
 		// Configure events
-		let _lastEventTimestamp;
-		if (deviceType === 'mobile') {
-			$(`${indicatorContainerSelector}, ${imageSelector}`).on('vclick', function(event) {
-				if (event.timeStamp === _lastEventTimestamp) return;
+		//let _lastEventTimestamp;
+		if (_deviceType === 'mobile') {
+			$(`${indicatorContainerSelector}, ${imageSelector}`).on('vclick', patchedClickHandler(function(event) {
 				if (currentImage === imageIndex) {
 					toggleElementDisplay(indicatorContainerSelector);
 				} else {
 					setActiveImage(imageIndex);
 				}
-				_lastEventTimestamp = event.timeStamp;
-			});
+			}));
 		} else {
 			$(indicatorContainerSelector).on('click', function() {
 				setActiveImage(imageIndex);
@@ -561,23 +568,23 @@ $(document).ready(function() {
 			startResize(event, imageIndex);
 			// Error In case of mobile:
 			// Unable to preventDefault inside passive event listener
-			if (deviceType === 'desktop') return false;
+			if (_deviceType === 'desktop') return false;
 		});
 		
 		// Close image
-		$(closeSelector).on('vclick', function(event) {
+		$(closeSelector).on('vclick', patchedClickHandler(function(event) {
 			removeImage(imageIndex);
 			sendUpdateMessage(getImageCount());
 			// Update currentImage
 			if (currentImage === imageIndex) {
 				setActiveImage(getFirstValidIndex());
 			}
-		})
+		}));
 		
 		// Set image as active
-		$(selectionSelector).on('vclick', function(event) {
+		$(selectionSelector).on('vclick', patchedClickHandler(function(event) {
 			setActiveImage(imageIndex);
-		})
+		}));
 	
 		// Drag options
 	    $(containerSelector).draggable({
@@ -692,7 +699,7 @@ $(document).ready(function() {
 
 	$("body").on('vmouseup', function() {
 		if (imageResizing >= 0) {
-			if (deviceType === 'desktop') {
+			if (_deviceType === 'desktop') {
 				showElement(false, getIndicatorContainerSelector(imageResizing));
 				$(this).css("cursor", "default");
 			}
@@ -715,51 +722,67 @@ $(document).ready(function() {
     const singleButtonOffset = 24 + toolbarButtonSpacing;
     const collapseTimeout = 5000;
     const toolbarAnimationDuration = 200;
-	let _toolbarTimer = null;
+	let _toolbarTimer = null; // Timer to hide the toolbar on desktop
+	let _buttonTimer = null;  // Timer to collapse the toolbar buttons
 	
-	const toggleButton = $("#togglebutton");
-	features.forEach(feature => {
+	function initDeviceType(deviceType) {
 
-		const featureButtonHtml = `<div id="${feature.selector.substring(1)}" class="toolbarbutton disabled ${feature.class}Off" data-desc="${feature.desc}"></div>`;
-		$(featureButtonHtml).insertBefore(toggleButton);
+		_deviceType = deviceType;
 
-		const element = $(feature.selector);
-        element.on('mouseenter', function() {
-            $("#buttondesc > span:first-child").text($(this).attr('data-desc'));
-            $("#buttondesc").stop(); // Stop possible current animation
-            $("#buttondesc").animate({ opacity: 1 }, toolbarAnimationDuration);
-        });
-        element.on('mouseleave', function() {
-            $("#buttondesc").stop(); // Stop possible current animation
-            $("#buttondesc").animate({ opacity: 0 }, toolbarAnimationDuration);
-        });
-		element.on('vclick', function () {
-			if (!$(this).hasClass('disabled')) {
-				feature.action();
+		const toggleButton = $("#togglebutton");
+		features.forEach(feature => {
+
+			const featureButtonHtml = `<div id="${feature.selector.substring(1)}" class="toolbarbutton ${feature.class}" data-desc="${feature.desc}"></div>`;
+			$(featureButtonHtml).insertBefore(toggleButton);
+
+			const element = $(feature.selector);
+			if (_deviceType === 'desktop') {
+				element.on('mouseenter', function() {
+					$("#buttondesc > span:first-child").text($(this).attr('data-desc'));
+					$("#buttondesc").stop(); // Stop possible current animation
+					$("#buttondesc").animate({ opacity: 1 }, toolbarAnimationDuration);
+				});
+				element.on('mouseleave', function() {
+					$("#buttondesc").stop(); // Stop possible current animation
+					$("#buttondesc").animate({ opacity: 0 }, toolbarAnimationDuration);
+				});
 			}
+			element.on('vclick', patchedClickHandler(function () {
+				if (!$(this).hasClass('disabled')) {
+					feature.action();
+				}
+			}));
 		});
-	});
-    
-    $("body").on('mouseenter', function() {
-		clearTimeout(_toolbarTimer);
-		$("#toolbarcontainer").stop();
-        $("#toolbarcontainer").animate({ bottom: 10 }, toolbarAnimationDuration);
-    });
-    $("body").on('mouseleave', function() {
-		_toolbarTimer = setTimeout(collapseAndHideToolbar, 5000);
-    });
-    $("#togglebutton").on('vclick', function() { 
-        toggleToolbar();
-    });
-    
-    let _buttonTimer = null;
-    $(".toolbarbutton").on('mouseleave', function() {
-        _buttonTimer = setTimeout(collapseToolbar, collapseTimeout);
-    });
-    $(".toolbarbutton").on('mouseenter', function() {
-        clearTimeout(_buttonTimer);
-    });
 
+		if (_deviceType === 'desktop') {
+			// Show/Hide toolbar when mouse over the body
+			$("body").on('mouseenter', function() {
+				clearTimeout(_toolbarTimer);
+				$("#toolbarcontainer").stop();
+				$("#toolbarcontainer").animate({ bottom: 10 }, toolbarAnimationDuration);
+			});
+			$("body").on('mouseleave', function() {
+				_toolbarTimer = setTimeout(collapseAndHideToolbar, 5000);
+			});
+
+			// clear/init timer to collapse the toolbar on mouseleave/mouseenter on any button
+			$(".toolbarbutton").on('mouseleave', function() {
+				_buttonTimer = setTimeout(collapseToolbar, collapseTimeout);
+			});
+			$(".toolbarbutton").on('mouseenter', function() {
+				clearTimeout(_buttonTimer);
+			});
+		} else {
+			// always show the toggle
+			$("#toolbarcontainer").css({
+					bottom: 10
+			});
+		}
+		updateFeatureStatus();
+	}
+
+    $("#togglebutton").on('vclick', patchedClickHandler(toggleToolbar));
+    
 	function collapseAndHideToolbar() {
         collapseToolbar();
 		$("#toolbarcontainer").stop();
