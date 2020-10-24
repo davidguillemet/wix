@@ -6,8 +6,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js"></script>
 <style>
+	/* Avoid scrolling with jQuery mobile */
 	body {
 		overflow: hidden!important;
+	} 
+	/* override min-height that is set as 300px by default in jQuery mobile */
+	.ui-page.ui-page-active {
+		min-height: auto !important;
 	}
 	.handle {
 		position: absolute;
@@ -838,7 +843,8 @@ $(document).ready(function() {
 	// Remove jQuery mobile background color 
 	$("body, body > div:first-child").css({
         "background-color" : "transparent",
-        "overflow": "hidden"
+        "overflow": "hidden",
+		"height": "100%"
     });
 
 	sendMessage({
