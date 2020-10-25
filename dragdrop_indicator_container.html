@@ -40,7 +40,6 @@
 		position: absolute;
 		width: auto;
 		height: auto;
-		display: none;
 	}
 	.indicatorContainer {
 		position: absolute;
@@ -190,9 +189,6 @@ $(document).ready(function() {
 	let _deviceType = 'desktop';
 	let _indicatorsTimer = null;
 
-	const actions = [];
-	let actionPtr = -1;
-
 	const features = [
 		{
 			selector: "#exportbutton",
@@ -216,15 +212,15 @@ $(document).ready(function() {
 				return getImageCount() > 0;
 			}
 		},
-		/*{
+		{
 			selector: "#redobutton",
 			desc: "Restaurer la dernière action",
 			class: "redoIcon",
 			action: function () {
-				redo();
+				_actions.redo();
 			},
 			isActive: function () {
-				return actions.length > 0 && actionPtr < actions.length - 1;
+				return _actions.canRedo();
 			}
 		},
 		{
@@ -232,14 +228,209 @@ $(document).ready(function() {
 			desc: "Annuler la dernière action",
 			class: "undoIcon",
 			action: function () {
-				undo();
+				_actions.undo();
 			},
 			isActive: function () {
-				return actionPtr >= 0;
+				return _actions.canUndo();
 			}
-		}*/
+		}
 	];
-	
+
+	function NormalizeBase(referenceWidth) {
+		this.referenceWidth = referenceWidth ?? frameSize().width;
+	}
+	NormalizeBase.prototype.normalize = function(value) {
+		return value * frameSize().width / this.referenceWidth;
+	}
+
+	function ImageData(dataOrIndex, referenceWidth) {
+		NormalizeBase.call(this, referenceWidth);
+
+		if (dataOrIndex instanceof Object) {
+			// The input parameter is an object containing the image data
+			this.data = dataOrIndex;
+		} else {
+			// Input parameter is the index of the image from which we want to extract the date
+			const containerElement = $(getContainerSelector(dataOrIndex));
+			const imageElment = $(getImageSelector(dataOrIndex));
+			this.data = {
+				url: imageElment.attr("src"),
+				position: {
+					top: containerElement.position().top,
+					left: containerElement.position().left
+				},
+				width: imageElment.width()
+			}
+		}
+	};
+	ImageData.prototype = Object.create(NormalizeBase.prototype);
+	ImageData.prototype.normalize = function() {
+		return {
+			...this.data,
+			position: {
+				top: NormalizeBase.prototype.normalize.call(this, this.data.position.top),
+				left: NormalizeBase.prototype.normalize.call(this, this.data.position.left)
+			},
+			width: NormalizeBase.prototype.normalize.call(this, this.data.width)
+		}
+	}
+
+	function Action(selector) {
+		NormalizeBase.call(this);
+		this.selector = selector;
+	};
+	Action.prototype = Object.create(NormalizeBase.prototype);
+	Action.prototype.getElement = function() {
+		return $(this.selector);
+	}
+
+	function AddAction(selector, index) {
+		Action.call(this, selector);
+		this.data = new ImageData(index);
+		this.imageIndex = index;
+	}
+	AddAction.prototype = Object.create(Action.prototype);
+	AddAction.prepareAction = function(selector) {
+		// empty
+	}
+	AddAction.prototype.redo = function() {
+		addImage(this.data.normalize(), this.imageIndex);
+	}
+	AddAction.prototype.undo = function() {
+		removeImage(this.imageIndex);
+	}
+
+	function SetAction(selector, prevSrc, newSrc) {
+		Action.call(this, selector);
+		this.newSrc = newSrc;
+		this.prevSrc = prevSrc;
+	}
+	SetAction.prototype = Object.create(Action.prototype);
+	SetAction.prepareAction = function(selector) {
+		// empty
+	}
+	SetAction.prototype.redo = function() {
+		this.getElement().attr("src", this.newSrc);
+	}
+	SetAction.prototype.undo = function() {
+		this.getElement().attr("src", this.prevSrc);
+	}
+
+	function DragAction(selector) {
+		Action.call(this, selector);
+		const element = $(selector);
+		const elementPosition = element.position();
+		this.initialPosition = { "top": element.attr("initialTop"), "left": element.attr("initialLeft") },
+		this.finalPosition = { "top": elementPosition.top, "left": elementPosition.left };
+	}
+	DragAction.prototype = Object.create(Action.prototype);
+	DragAction.prepareAction = function(selector) {
+		const element = $(selector);
+		const elementPosition = element.position();
+		element.attr("initialTop", elementPosition.top);
+		element.attr("initialLeft", elementPosition.left);
+	}
+	DragAction.prototype.setPosition = function(position) {
+		this.getElement().css({
+			top: this.normalize(position.top),
+			left: this.normalize(position.left)
+		})	
+	}
+	DragAction.prototype.redo = function() {
+		this.setPosition(this.finalPosition);
+	}
+	DragAction.prototype.undo = function() {
+		this.setPosition(this.initialPosition);
+	}
+
+	function ResizeAction(selector) {
+		Action.call(this, selector);
+		const element = this.getElement();
+		this.initialWidth = element.attr("initialWidth");
+		this.finalWidth = element.width();
+	}
+	ResizeAction.prototype = Object.create(Action.prototype);
+	ResizeAction.prepareAction = function(selector) {
+		const element = $(selector);
+		element.attr("initialWidth", element.width());
+	}
+	ResizeAction.prototype.setSize = function(size) {
+		this.getElement().css({
+			width: this.normalize(size)
+		})
+	}
+	ResizeAction.prototype.undo = function() {
+		this.setSize(this.initialWidth);
+	}
+	ResizeAction.prototype.redo = function() {
+		this.setSize(this.finalWidth);
+	}
+
+	function RemoveAction(index) {
+		const selector = getImageSelector(index);
+		Action.call(this, selector);
+		this.data = new ImageData(index);
+		this.imageIndex = index;
+	}
+	RemoveAction.prototype = Object.create(Action.prototype);
+	RemoveAction.prepareAction = function(selector) {
+		// empty
+	}
+	RemoveAction.prototype.redo = function() {
+		removeImage(this.imageIndex);
+	}
+	RemoveAction.prototype.undo = function() {
+		addImage(this.data.normalize(), this.imageIndex);
+	}
+
+	function RemoveAllAction(removeActions) {
+		this.removeActions = removeActions;
+	}
+	RemoveAllAction.prototype.redo = function() {
+		this.removeActions.forEach(action => {
+			removeImage(action.imageIndex);
+		})
+	}
+	RemoveAllAction.prototype.undo = function() {
+		this.removeActions.forEach(action => {
+			addImage(action.data.normalize(), action.imageIndex);
+		})
+	}
+
+	function Actions() {
+		this.actions = [];
+		this.actionPtr = -1;
+	};
+	Actions.prototype.canRedo = function() {
+		return this.actions.length > 0 && this.actionPtr < this.actions.length - 1;
+	}
+	Actions.prototype.canUndo = function() {
+		return this.actionPtr >= 0;
+	}
+	Actions.prototype.addAction = function(action) {
+		// If some undo has been triggered, the action pointer is less than the last action index
+		// And then, if a new action is processed, we must remove all actioons after the current action pointer
+		// -> set the length property to remove all elements after index (length -1)
+		this.actions.length = this.actionPtr + 1;
+		this.actions.push(action);
+		this.actionPtr = this.actions.length - 1;
+		updateFeatureStatus();
+	};
+	Actions.prototype.redo = function() {
+		const action = this.actions[this.actionPtr + 1];
+		action.redo();
+		this.actionPtr++;
+		updateFeatureStatus();
+	}
+	Actions.prototype.undo = function() {
+		const action = this.actions[this.actionPtr];
+		action.undo();
+		this.actionPtr--;
+		updateFeatureStatus();
+	}
+
+	const _actions = new Actions();
+
 	window.onmessage = (event) => {
 		if (event.data) {
 			const message = event.data;
@@ -248,8 +439,7 @@ $(document).ready(function() {
 				setImage(message.image);
 				break;
 			case "add":
-				addImage();
-				setImage(message.image);
+				addImage({ url: message.image });
 				break;
 			case "device":
 				initDeviceType(message.device);
@@ -275,7 +465,6 @@ $(document).ready(function() {
 	}
 	
 	function sendUpdateMessage(count) {
-		updateFeatureStatus();
 		sendMessage({
 			action: "update",
 			count: count
@@ -290,6 +479,13 @@ $(document).ready(function() {
 			
 	function log(msg) {
 		$("#log").append("<span>&nbsp;" + msg + "</span>");
+	}
+
+	function frameSize() {
+		return {
+			width: $("body").width(),
+			height: $("body").height()
+		}
 	}
 
 	const initialImageWidth = 300;
@@ -403,23 +599,31 @@ $(document).ready(function() {
 	
 	function removeAll() {
 		let index = 0;
+		const removeActions = [];
 		while (getImageCount() > 0) {
 			if ($(getContainerSelector(index)).length > 0) {
+				removeActions.push(new RemoveAction(index));
 				removeImage(index);
 			}
 			index++;
 		}
+		_actions.addAction(new RemoveAllAction(removeActions));
 		sendUpdateMessage(0);
 		currentImage = -1;
 	}
 		
-	function removeImage(imageIndex) {
+	function removeImage(imageIndex, addAction) {
 		const containerSelector = getContainerSelector(imageIndex);
 		const imageSelector = getImageSelector(imageIndex);
 		const handleSelector = getHandleSelector(imageIndex);
 		const closeSelector = getCloseSelector(imageIndex);
 		const selectionSelector = getSelectionSelector(imageIndex);
 		const indicatorContainerSelector = getIndicatorContainerSelector(imageIndex);
+
+		if (addAction === true) {
+			_actions.addAction(new RemoveAction(imageIndex));
+		}
+
 		$(indicatorContainerSelector).off();
 		$(handleSelector).off();
 		$(closeSelector).off();
@@ -433,7 +637,7 @@ $(document).ready(function() {
 		const project = {
 			version: 1.0,
 			images: [],
-			containerWidth: $("body").width()
+			containerWidth: frameSize().width
 		};
 		const imageCount = getImageCount();
 		for (let imageIndex = 0; project.images.length < imageCount; imageIndex++) {
@@ -441,17 +645,8 @@ $(document).ready(function() {
 			if (containerElement.length === 0) {
 				continue;
 			}
-			
-			const imageElment = $(getImageSelector(imageIndex));
-			const newImage = {
-				url: imageElment.attr("src"),
-				position: {
-					top: containerElement.position().top,
-					left: containerElement.position().left
-				},
-				width: imageElment.width()
-			};
-			project.images.push(newImage);
+			const imageData = new ImageData(imageIndex);
+			project.images.push(imageData.data);
 		}
 		sendMessage({
 			action: "export",
@@ -466,21 +661,10 @@ $(document).ready(function() {
 		}
 		
 		const initialWidth = projectData.containerWidth;
-		const currentWidth = $("body").width();
-		const scale = initialWidth / currentWidth;
 		
 		for (let imageIndex = 0; imageIndex < projectData.images.length; imageIndex++) {
-			const imageData = projectData.images[imageIndex];
-			const scaledImageData = {
-				...imageData,
-				position: {
-					top: imageData.position.top / scale,
-					left: imageData.position.left / scale
-				},
-				width: imageData.width / scale
-			}
-			addImage(scaledImageData);
-			setImage(imageData.url);
+			const imageData = new ImageData(projectData.images[imageIndex], initialWidth);
+			addImage(imageData.normalize());
 		}
 	}
 
@@ -493,8 +677,10 @@ $(document).ready(function() {
 		};
 	}
 
-	function addImage(imageData) {		
-		const imageIndex = getFreeIndex();
+	function addImage(imageData, index) {
+		const availableSize = frameSize();
+
+		const imageIndex = index ?? getFreeIndex();
 		const containerId = `container${imageIndex}`;
 		const imageId = `image${imageIndex}`;
 		const handleId = `handle${imageIndex}`;
@@ -502,7 +688,7 @@ $(document).ready(function() {
 		const selectionId = `selection${imageIndex}`;
 		const indicatorContainerId = `indicatorContainer${imageIndex}`;
 		
-		const image = `<img id="${imageId}">`;
+		const image = `<img id="${imageId}" src="${imageData.url}">`;
 		const resizeHandle = `<div class="handle" id="${handleId}"></div>`;
 		const closeButton = `<div class="closeIcon" id="${closeId}"></div>`;
 		const selectionIndicator = `<div class="selection" id="${selectionId}"></div>`;
@@ -571,6 +757,7 @@ $(document).ready(function() {
 		// Handle mousedown
 		$(handleSelector).on('vmousedown', function(event) {
 			startResize(event, imageIndex);
+			ResizeAction.prepareAction(imageSelector);
 			// Error In case of mobile:
 			// Unable to preventDefault inside passive event listener
 			if (_deviceType === 'desktop') return false;
@@ -578,7 +765,7 @@ $(document).ready(function() {
 		
 		// Close image
 		$(closeSelector).on('vclick', patchedClickHandler(function(event) {
-			removeImage(imageIndex);
+			removeImage(imageIndex, true);
 			sendUpdateMessage(getImageCount());
 			// Update currentImage
 			if (currentImage === imageIndex) {
@@ -595,42 +782,47 @@ $(document).ready(function() {
 	    $(containerSelector).draggable({
 			handle: `${indicatorContainerSelector}, ${imageSelector}`,
 			cancel: handleSelector,
-			containment: "parent"
+			containment: "parent",
+			start: function (event, ui) {
+				DragAction.prepareAction(containerSelector)
+			},
+			stop: function (event, ui) {
+				_actions.addAction(new DragAction(containerSelector));
+			}
 	    });
 
-		let imageWidth;
-		let imageTop, imageLeft;
-		if (imageData == null) {
-			const availableWidth = $("body").width();
-			// the initial width is a third of the available width
-			imageWidth = availableWidth / 3;
-			imageLeft = (availableWidth - imageWidth) / 2;
-			// the initial top is a 5th of the available height
-			const availableHeight = $("body").height();
-			imageTop = availableHeight / 5;
-		} else {
-			imageWidth = imageData.width;
-			imageLeft = imageData.position.left;
-			imageTop = imageData.position.top;
-		}
+		// the initial width is a third of the available width
+		const imageWidth = imageData.width ?? availableSize.width / 3;
+		const imageLeft = imageData.position ? imageData.position.left : (availableSize.width - imageWidth) / 2;
+		// the initial top is a 5th of the available height
+		const imageTop = imageData.position ? imageData.position.top : availableSize.height / 5;
+		
 		$(imageSelector).css({
 			width: imageWidth
 		})
 		$(containerSelector).css({
 			top: imageTop,
-			left: imageLeft,
-			display: "block"
+			left: imageLeft
 		});
 
 		setActiveImage(imageIndex);
 		sendUpdateMessage(getImageCount());
+		if (index == null) {
+			// register a new action only in case wa have not been called from a redo()
+			_actions.addAction(new AddAction(imageSelector, imageIndex));
+		}
 	}
 	
 	function setImage(imageUrl) {
 		if (currentImage === -1) {
-			addImage();
+			addImage({ url: imageUrl });
+		} else {
+			const selector = getImageSelector(currentImage);
+			const element = $(selector);
+			const prevSrc = element.attr("src");
+			element.attr("src", imageUrl);
+			_actions.addAction(new SetAction(selector, prevSrc, imageUrl))
 		}
-		$(getImageSelector(currentImage)).attr("src", imageUrl);
 	}
 
 	function showElement(show, elementSelector) {
@@ -708,6 +900,7 @@ $(document).ready(function() {
 				showElement(false, getIndicatorContainerSelector(imageResizing));
 				$(this).css("cursor", "default");
 			}
+			_actions.addAction(new ResizeAction(getImageSelector(imageResizing)));
 			imageResizing = -1;
 		}
 	});
@@ -855,7 +1048,7 @@ $(document).ready(function() {
 </head>
 <body>
 
-<p id="log" style="color: black; word-break: break-all"></p>
+<p id="log" style="color: black; word-break: break-all;"></p>
 
 <div id="toolbarcontainer" expanded="false">
 	<div id="buttondesc"><span style="white-space: nowrap;"></span></div>
