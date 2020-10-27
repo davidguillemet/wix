@@ -947,6 +947,10 @@ $(document).ready(function() {
 			}
 			element.on('vclick', patchedClickHandler(function () {
 				if (!$(this).hasClass('disabled')) {
+					if (_deviceType === 'mobile') {
+						clearTimeout(_buttonTimer);
+						_buttonTimer = setTimeout(collapseToolbar, collapseTimeout);
+					}
 					feature.action();
 				}
 			}));
