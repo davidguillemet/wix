@@ -195,7 +195,7 @@ $(document).ready(function() {
 			desc: "Exporter le projet",
 			class: "exportIcon",
 			action: function () {
-				exportProject();
+				exportProject("file");
 			},
 			isActive: function () {
 				return getImageCount() > 0;
@@ -415,18 +415,21 @@ $(document).ready(function() {
 		this.actions.push(action);
 		this.actionPtr = this.actions.length - 1;
 		updateFeatureStatus();
+		exportProject("save");
 	};
 	Actions.prototype.redo = function() {
 		const action = this.actions[this.actionPtr + 1];
 		action.redo();
 		this.actionPtr++;
 		updateFeatureStatus();
+		exportProject("save");
 	}
 	Actions.prototype.undo = function() {
 		const action = this.actions[this.actionPtr];
 		action.undo();
 		this.actionPtr--;
 		updateFeatureStatus();
+		exportProject("save");
 	}
 
 	const _actions = new Actions();
@@ -447,12 +450,6 @@ $(document).ready(function() {
 			case "border":
 				setBorder(message.property, message.value);
 				break
-			case "removeAll":
-				removeAll();
-				break;
-			case "export":
-				exportProject();
-				break;
 			case "import":
 				importProject(message.data, message.clearBefore);
 				break;
@@ -633,7 +630,7 @@ $(document).ready(function() {
 		$(containerSelector).remove();
 	}
 
-	function exportProject() {
+	function exportProject(target) {
 		const project = {
 			version: 1.0,
 			images: [],
@@ -650,6 +647,7 @@ $(document).ready(function() {
 		}
 		sendMessage({
 			action: "export",
+			target: target,
 			data: project
 		})
 	}
