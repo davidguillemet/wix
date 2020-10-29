@@ -297,7 +297,7 @@ $(document).ready(function() {
 		addImage(this.data.normalize(), this.imageIndex);
 	}
 	AddAction.prototype.undo = function() {
-		removeImage(this.imageIndex);
+		removeImage(this.imageIndex, true);
 	}
 
 	function SetAction(selector, prevSrc, newSrc) {
@@ -377,29 +377,44 @@ $(document).ready(function() {
 		// empty
 	}
 	RemoveAction.prototype.redo = function() {
-		removeImage(this.imageIndex);
+		removeImage(this.imageIndex, true);
 	}
 	RemoveAction.prototype.undo = function() {
 		addImage(this.data.normalize(), this.imageIndex);
 	}
 
-	function RemoveAllAction(removeActions) {
-		this.removeActions = removeActions;
+	function BorderAction(property, prevValue, newValue) {
+		Action.call(this, ""); // No need for a selector : global action
+		this.property = property;
+		this.prevValue = prevValue;
+		this.newValue = newValue;
 	}
-	RemoveAllAction.prototype.redo = function() {
-		this.removeActions.forEach(action => {
-			removeImage(action.imageIndex);
+	BorderAction.prototype = Object.create(Action.prototype);
+	BorderAction.prototype.redo = function() {
+		setBorder(this.property, this.newValue, true);
+	}
+	BorderAction.prototype.undo = function() {
+		setBorder(this.property, this.prevValue, true);
+	}
+
+	function CompositeAction(actions) {
+		this.actions = actions;
+	}
+	CompositeAction.prototype.redo = function() {
+		this.actions.forEach(action => {
+			action.redo();
 		})
 	}
-	RemoveAllAction.prototype.undo = function() {
-		this.removeActions.forEach(action => {
-			addImage(action.data.normalize(), action.imageIndex);
+	CompositeAction.prototype.undo = function() {
+		this.actions.forEach(action => {
+			action.undo();
 		})
 	}
 
 	function Actions() {
 		this.actions = [];
 		this.actionPtr = -1;
+		this.compositeActions = null;
 	};
 	Actions.prototype.canRedo = function() {
 		return this.actions.length > 0 && this.actionPtr < this.actions.length - 1;
@@ -408,14 +423,19 @@ $(document).ready(function() {
 		return this.actionPtr >= 0;
 	}
 	Actions.prototype.addAction = function(action) {
-		// If some undo has been triggered, the action pointer is less than the last action index
-		// And then, if a new action is processed, we must remove all actioons after the current action pointer
-		// -> set the length property to remove all elements after index (length -1)
-		this.actions.length = this.actionPtr + 1;
-		this.actions.push(action);
-		this.actionPtr = this.actions.length - 1;
-		updateFeatureStatus();
-		exportProject("save");
+		if (this.compositeActions !== null) {
+			// Compposite action is open
+			this.compositeActions.push(action);
+		} else {
+			// If some undo has been triggered, the action pointer is less than the last action index
+			// And then, if a new action is processed, we must remove all actioons after the current action pointer
+			// -> set the length property to remove all elements after index (length -1)
+			this.actions.length = this.actionPtr + 1;
+			this.actions.push(action);
+			this.actionPtr = this.actions.length - 1;
+			updateFeatureStatus();
+			exportProject("save");
+		}
 	};
 	Actions.prototype.redo = function() {
 		const action = this.actions[this.actionPtr + 1];
@@ -430,6 +450,14 @@ $(document).ready(function() {
 		this.actionPtr--;
 		updateFeatureStatus();
 		exportProject("save");
+	}
+	Actions.prototype.beginCompositeAction = function() {
+		this.compositeActions = [];
+	}
+	Actions.prototype.endCompositeAction = function() {
+		const compositeAction = new CompositeAction(this.compositeActions);
+		this.compositeActions = null;
+		this.addAction(compositeAction);
 	}
 
 	const _actions = new Actions();
@@ -589,27 +617,29 @@ $(document).ready(function() {
 		}
 	}
 
-	function setBorder(property, value) {
+	function setBorder(property, value, fromUndoRedo) {
+		if (!fromUndoRedo) {
+			_actions.addAction(new BorderAction(property, borderProperties[property], value));
+		}
 		borderProperties[property] = value;
 		$("[id^=image]").css(property, value);
 	}
 	
 	function removeAll() {
 		let index = 0;
-		const removeActions = [];
+		_actions.beginCompositeAction();
 		while (getImageCount() > 0) {
 			if ($(getContainerSelector(index)).length > 0) {
-				removeActions.push(new RemoveAction(index));
 				removeImage(index);
 			}
 			index++;
 		}
-		_actions.addAction(new RemoveAllAction(removeActions));
+		_actions.endCompositeAction();
 		sendUpdateMessage(0);
 		currentImage = -1;
 	}
 		
-	function removeImage(imageIndex, addAction) {
+	function removeImage(imageIndex, fromUndoRedo) {
 		const containerSelector = getContainerSelector(imageIndex);
 		const imageSelector = getImageSelector(imageIndex);
 		const handleSelector = getHandleSelector(imageIndex);
@@ -617,7 +647,7 @@ $(document).ready(function() {
 		const selectionSelector = getSelectionSelector(imageIndex);
 		const indicatorContainerSelector = getIndicatorContainerSelector(imageIndex);
 
-		if (addAction === true) {
+		if (!fromUndoRedo) {
 			_actions.addAction(new RemoveAction(imageIndex));
 		}
 
@@ -632,9 +662,13 @@ $(document).ready(function() {
 
 	function exportProject(target) {
 		const project = {
-			version: 1.0,
+			version: 2.0, // Adding border size + color
 			images: [],
-			containerWidth: frameSize().width
+			containerWidth: frameSize().width,
+			border: {
+				color: borderProperties["border-color"],
+				width: borderProperties["border-width"]
+			}
 		};
 		const imageCount = getImageCount();
 		for (let imageIndex = 0; project.images.length < imageCount; imageIndex++) {
@@ -654,8 +688,15 @@ $(document).ready(function() {
 	
 	function importProject(projectData, clearBefore) {
 		
+		_actions.beginCompositeAction();
 		if (clearBefore === true) {
 			removeAll();
+		}
+
+		if (projectData.version >= 2) {
+			// Adding border color/width in V2
+			setBorder("border-color", projectData.border.color);
+			setBorder("border-width", projectData.border.width);
 		}
 		
 		const initialWidth = projectData.containerWidth;
@@ -664,6 +705,7 @@ $(document).ready(function() {
 			const imageData = new ImageData(projectData.images[imageIndex], initialWidth);
 			addImage(imageData.normalize());
 		}
+		_actions.endCompositeAction();
 	}
 
 	let _lastEventTimestamp;
@@ -763,7 +805,7 @@ $(document).ready(function() {
 		
 		// Close image
 		$(closeSelector).on('vclick', patchedClickHandler(function(event) {
-			removeImage(imageIndex, true);
+			removeImage(imageIndex);
 			sendUpdateMessage(getImageCount());
 			// Update currentImage
 			if (currentImage === imageIndex) {
