@@ -391,10 +391,10 @@ $(document).ready(function() {
 	}
 	BorderAction.prototype = Object.create(Action.prototype);
 	BorderAction.prototype.redo = function() {
-		setBorder(this.property, this.newValue, true);
+		setBorder(this.property, this.newValue, ActionContext.FROM_UNDO_REDO);
 	}
 	BorderAction.prototype.undo = function() {
-		setBorder(this.property, this.prevValue, true);
+		setBorder(this.property, this.prevValue, ActionContext.FROM_UNDO_REDO);
 	}
 
 	function CompositeAction(actions) {
@@ -422,7 +422,7 @@ $(document).ready(function() {
 	Actions.prototype.canUndo = function() {
 		return this.actionPtr >= 0;
 	}
-	Actions.prototype.addAction = function(action) {
+	Actions.prototype.addAction = function(action, save = true) {
 		if (this.compositeActions !== null) {
 			// Compposite action is open
 			this.compositeActions.push(action);
@@ -434,7 +434,9 @@ $(document).ready(function() {
 			this.actions.push(action);
 			this.actionPtr = this.actions.length - 1;
 			updateFeatureStatus();
-			exportProject("save");
+			if (save === true) {
+				exportProject("save");
+			}
 		}
 	};
 	Actions.prototype.redo = function() {
@@ -451,16 +453,24 @@ $(document).ready(function() {
 		updateFeatureStatus();
 		exportProject("save");
 	}
+	Actions.prototype.isCompositeAction = function() {
+		return this.compositeActions !== null;
+	}
 	Actions.prototype.beginCompositeAction = function() {
 		this.compositeActions = [];
 	}
-	Actions.prototype.endCompositeAction = function() {
+	Actions.prototype.endCompositeAction = function(save) {
 		const compositeAction = new CompositeAction(this.compositeActions);
 		this.compositeActions = null;
-		this.addAction(compositeAction);
+		this.addAction(compositeAction, save);
 	}
 
 	const _actions = new Actions();
+
+	const ActionContext = {
+		FROM_MESSAGE: 0,
+		FROM_UNDO_REDO: 1
+	}
 
 	window.onmessage = (event) => {
 		if (event.data) {
@@ -476,10 +486,10 @@ $(document).ready(function() {
 				initDeviceType(message.device);
 				break
 			case "border":
-				setBorder(message.property, message.value);
+				setBorder(message.property, message.value, ActionContext.FROM_MESSAGE);
 				break
 			case "import":
-				importProject(message.data, message.clearBefore);
+				importProject(message.data, message.clearBefore, message.source);
 				break;
 			}
 		}
@@ -503,7 +513,7 @@ $(document).ready(function() {
 	}
 			
 	function log(msg) {
-		$("#log").append("<span>&nbsp;" + msg + "</span>");
+		$("#log").append("<span>&nbsp;/&nbsp;" + msg + "</span>");
 	}
 
 	function frameSize() {
@@ -617,29 +627,51 @@ $(document).ready(function() {
 		}
 	}
 
-	function setBorder(property, value, fromUndoRedo) {
-		if (!fromUndoRedo) {
-			_actions.addAction(new BorderAction(property, borderProperties[property], value));
+	function setBorder(property, newValue, actionContext) {
+
+		const prevValue = borderProperties[property];
+		borderProperties[property] = newValue;
+		$("[id^=image]").css(property, newValue);
+		
+		if (actionContext != ActionContext.FROM_UNDO_REDO) {
+			// Don't create an action if we are processing an undo or redo action
+			_actions.addAction(new BorderAction(property, prevValue, newValue));
 		}
-		borderProperties[property] = value;
-		$("[id^=image]").css(property, value);
+		
+		if (actionContext != ActionContext.FROM_MESSAGE) {
+			// Don't send back a message if the change comes from a message
+			sendMessage({
+				action: 'border',
+				property: property,
+				value: newValue
+			});
+		}
 	}
 	
 	function removeAll() {
 		let index = 0;
-		_actions.beginCompositeAction();
+		const isCompositeAction = _actions.isCompositeAction();
+
+		if (!isCompositeAction) {
+			_actions.beginCompositeAction();
+		}
+
 		while (getImageCount() > 0) {
 			if ($(getContainerSelector(index)).length > 0) {
 				removeImage(index);
 			}
 			index++;
 		}
-		_actions.endCompositeAction();
+
+		if (!isCompositeAction) {
+			_actions.endCompositeAction(true);
+		}
+
 		sendUpdateMessage(0);
 		currentImage = -1;
 	}
 		
-	function removeImage(imageIndex, fromUndoRedo) {
+	function removeImage(imageIndex, actionContext) {
 		const containerSelector = getContainerSelector(imageIndex);
 		const imageSelector = getImageSelector(imageIndex);
 		const handleSelector = getHandleSelector(imageIndex);
@@ -647,7 +679,8 @@ $(document).ready(function() {
 		const selectionSelector = getSelectionSelector(imageIndex);
 		const indicatorContainerSelector = getIndicatorContainerSelector(imageIndex);
 
-		if (!fromUndoRedo) {
+		if (actionContext != ActionContext.FROM_UNDO_REDO) {
+			// Don't create new action if we are running an undo/redo action
 			_actions.addAction(new RemoveAction(imageIndex));
 		}
 
@@ -686,9 +719,10 @@ $(document).ready(function() {
 		})
 	}
 	
-	function importProject(projectData, clearBefore) {
+	function importProject(projectData, clearBefore, source) {
 		
 		_actions.beginCompositeAction();
+
 		if (clearBefore === true) {
 			removeAll();
 		}
@@ -696,7 +730,10 @@ $(document).ready(function() {
 		if (projectData.version >= 2) {
 			// Adding border color/width in V2
 			setBorder("border-color", projectData.border.color);
-			setBorder("border-width", projectData.border.width);
+			const width = parseInt(projectData.border.width);
+			if (!isNaN(width)) {
+				setBorder("border-width", projectData.border.width);
+			}
 		}
 		
 		const initialWidth = projectData.containerWidth;
@@ -705,7 +742,8 @@ $(document).ready(function() {
 			const imageData = new ImageData(projectData.images[imageIndex], initialWidth);
 			addImage(imageData.normalize());
 		}
-		_actions.endCompositeAction();
+
+		_actions.endCompositeAction(false);
 	}
 
 	let _lastEventTimestamp;
