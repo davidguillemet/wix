@@ -16,24 +16,16 @@
 	}
 	.handle {
 		position: absolute;
-		bottom: 0px;
-		right: 0px;
+		bottom: -5px;
+		right: -5px;
 		border: 1px solid black;
 		background-color: white;
 		cursor: se-resize;
 	}
 	.selection {
 		position: absolute;
-		top: 0px;
-		left: 0px;
-		cursor: pointer;
-	}
-	.closeButton {
-		position: absolute;
-		top: 0px;
-		right: 0px;
-		border: 1px solid black;
-		background-color: white;
+		top: -5px;
+		left: -5px;
 		cursor: pointer;
 	}
 	.container {
@@ -146,8 +138,8 @@
     }
 	.closeIcon {
 		position: absolute;
-		top: -3px;
-		right: -3px;
+		top: -6px;
+		right: -6px;
         width: 16;
         height: 16px;
 		cursor: pointer;
@@ -531,7 +523,6 @@ $(document).ready(function() {
 
 	const initialImageWidth = 300;
 	const handleSize = 10;
-	const containerPadding = 5;
 	const borderProperties = [];
 	borderProperties['border-color'] = 'white';
 	borderProperties['border-width'] = '2px';
@@ -799,7 +790,6 @@ $(document).ready(function() {
 			"border-radius": handleSize / 2,
 			"background-color": inactiveColor
 		})
-		$(containerSelector).css("padding", containerPadding + "px");
 
 		// Configure events
 		//let _lastEventTimestamp;
