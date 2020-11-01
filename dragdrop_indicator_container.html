@@ -251,9 +251,14 @@ $(document).ready(function() {
 			// Input parameter is the index of the image from which we want to extract the date
 			const containerElement = $(getContainerSelector(dataOrIndex));
 			const imageElement = $(getImageSelector(dataOrIndex));
+			
+			const imageWidth = imageElement.width();
+			const imageHeight = imageElement.height();
+			const ratio = imageWidth / imageHeight;
+
 			this.data = {
 				url: imageElement.attr("src"),
-				ratio: parseFloat(imageElement.attr("ratio")),
+				ratio: ratio,
 				position: {
 					top: containerElement.position().top,
 					left: containerElement.position().left
@@ -273,10 +278,9 @@ $(document).ready(function() {
 			width: NormalizeBase.prototype.normalize.call(this, this.data.width)
 		}
 	}
-	ImageData.fromUrlAndRatio = function(url, ratio) {
+	ImageData.fromUrl = function(url) {
 		return {
-			url: url,
-			ratio: ratio
+			url: url
 		}
 	};
 
@@ -316,11 +320,9 @@ $(document).ready(function() {
 	}
 	SetAction.prototype.redo = function() {
 		this.getElement().attr("src", this.newData.url);
-		this.getElement().attr("ratio", this.newData.ratio);
 	}
 	SetAction.prototype.undo = function() {
 		this.getElement().attr("src", this.prevData.url);
-		this.getElement().attr("ratio", this.prevData.ratio);
 	}
 
 	function DragAction(selector) {
@@ -484,10 +486,10 @@ $(document).ready(function() {
 			const message = event.data;
 			switch (message.action) {
 			case "set":
-				setImage(ImageData.fromUrlAndRatio(message.image, message.ratio));
+				setImage(ImageData.fromUrl(message.image));
 				break;
 			case "add":
-				addImage(ImageData.fromUrlAndRatio(message.image, message.ratio));
+				addImage(ImageData.fromUrl(message.image));
 				break;
 			case "device":
 				initDeviceType(message.device);
@@ -774,7 +776,7 @@ $(document).ready(function() {
 		const selectionId = `selection${imageIndex}`;
 		const indicatorContainerId = `indicatorContainer${imageIndex}`;
 		
-		const image = `<img id="${imageId}" src="${imageData.url}" ratio="${imageData.ratio ?? 0}">`;
+		const image = `<img id="${imageId}" src="${imageData.url}">`;
 		const resizeHandle = `<div class="handle" id="${handleId}"></div>`;
 		const closeButton = `<div class="closeIcon" id="${closeId}"></div>`;
 		const selectionIndicator = `<div class="selection" id="${selectionId}"></div>`;
@@ -905,12 +907,10 @@ $(document).ready(function() {
 			const selector = getImageSelector(currentImage);
 			const element = $(selector);
 			const prevSrc = element.attr("src");
-			const prevRatio = element.attr("ratio");
 			element.attr("src", imageData.url);
-			element.attr("ratio", imageData.ratio);
 			_actions.addAction(new SetAction(
 				selector,
-				ImageData.fromUrlAndRatio(prevSrc, prevRatio),
+				ImageData.fromUrl(prevSrc),
 				imageData))
 		}
 	}
