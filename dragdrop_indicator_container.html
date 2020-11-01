@@ -250,14 +250,15 @@ $(document).ready(function() {
 		} else {
 			// Input parameter is the index of the image from which we want to extract the date
 			const containerElement = $(getContainerSelector(dataOrIndex));
-			const imageElment = $(getImageSelector(dataOrIndex));
+			const imageElement = $(getImageSelector(dataOrIndex));
 			this.data = {
-				url: imageElment.attr("src"),
+				url: imageElement.attr("src"),
+				ratio: parseFloat(imageElement.attr("ratio")),
 				position: {
 					top: containerElement.position().top,
 					left: containerElement.position().left
 				},
-				width: imageElment.width()
+				width: imageElement.width()
 			}
 		}
 	};
@@ -272,6 +273,12 @@ $(document).ready(function() {
 			width: NormalizeBase.prototype.normalize.call(this, this.data.width)
 		}
 	}
+	ImageData.fromUrlAndRatio = function(url, ratio) {
+		return {
+			url: url,
+			ratio: ratio
+		}
+	};
 
 	function Action(selector) {
 		NormalizeBase.call(this);
@@ -298,20 +305,22 @@ $(document).ready(function() {
 		removeImage(this.imageIndex, true);
 	}
 
-	function SetAction(selector, prevSrc, newSrc) {
+	function SetAction(selector, prevData, newData) {
 		Action.call(this, selector);
-		this.newSrc = newSrc;
-		this.prevSrc = prevSrc;
+		this.prevData = prevData;
+		this.newData = newData;
 	}
 	SetAction.prototype = Object.create(Action.prototype);
 	SetAction.prepareAction = function(selector) {
 		// empty
 	}
 	SetAction.prototype.redo = function() {
-		this.getElement().attr("src", this.newSrc);
+		this.getElement().attr("src", this.newData.url);
+		this.getElement().attr("ratio", this.newData.ratio);
 	}
 	SetAction.prototype.undo = function() {
-		this.getElement().attr("src", this.prevSrc);
+		this.getElement().attr("src", this.prevData.url);
+		this.getElement().attr("ratio", this.prevData.ratio);
 	}
 
 	function DragAction(selector) {
@@ -475,10 +484,10 @@ $(document).ready(function() {
 			const message = event.data;
 			switch (message.action) {
 			case "set":
-				setImage(message.image);
+				setImage(ImageData.fromUrlAndRatio(message.image, message.ratio));
 				break;
 			case "add":
-				addImage({ url: message.image });
+				addImage(ImageData.fromUrlAndRatio(message.image, message.ratio));
 				break;
 			case "device":
 				initDeviceType(message.device);
@@ -692,7 +701,9 @@ $(document).ready(function() {
 
 	function exportProject(target) {
 		const project = {
-			version: 2.0, // Adding border size + color
+			// V 2.0 = Adding border size + color
+			// V 3.0 = Adding ratio for each image
+			version: 3.0, 
 			images: [],
 			containerWidth: frameSize().width,
 			border: {
@@ -763,7 +774,7 @@ $(document).ready(function() {
 		const selectionId = `selection${imageIndex}`;
 		const indicatorContainerId = `indicatorContainer${imageIndex}`;
 		
-		const image = `<img id="${imageId}" src="${imageData.url}">`;
+		const image = `<img id="${imageId}" src="${imageData.url}" ratio="${imageData.ratio ?? 0}">`;
 		const resizeHandle = `<div class="handle" id="${handleId}"></div>`;
 		const closeButton = `<div class="closeIcon" id="${closeId}"></div>`;
 		const selectionIndicator = `<div class="selection" id="${selectionId}"></div>`;
@@ -887,15 +898,20 @@ $(document).ready(function() {
 		}
 	}
 	
-	function setImage(imageUrl) {
+	function setImage(imageData) {
 		if (currentImage === -1) {
-			addImage({ url: imageUrl });
+			addImage(imageData);
 		} else {
 			const selector = getImageSelector(currentImage);
 			const element = $(selector);
 			const prevSrc = element.attr("src");
-			element.attr("src", imageUrl);
-			_actions.addAction(new SetAction(selector, prevSrc, imageUrl))
+			const prevRatio = element.attr("ratio");
+			element.attr("src", imageData.url);
+			element.attr("ratio", imageData.ratio);
+			_actions.addAction(new SetAction(
+				selector,
+				ImageData.fromUrlAndRatio(prevSrc, prevRatio),
+				imageData))
 		}
 	}
 
