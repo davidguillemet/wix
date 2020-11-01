@@ -252,18 +252,14 @@ $(document).ready(function() {
 			const containerElement = $(getContainerSelector(dataOrIndex));
 			const imageElement = $(getImageSelector(dataOrIndex));
 			
-			const imageWidth = imageElement.width();
-			const imageHeight = imageElement.height();
-			const ratio = imageWidth / imageHeight;
-
 			this.data = {
 				url: imageElement.attr("src"),
-				ratio: ratio,
 				position: {
 					top: containerElement.position().top,
 					left: containerElement.position().left
 				},
-				width: imageElement.width()
+				width: imageElement.width(),
+				height: imageElement.height()
 			}
 		}
 	};
