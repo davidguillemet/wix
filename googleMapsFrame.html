@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnMKt_N8Jui3YVLFEmDu057nj1OYaJoJA&callback=initMap&libraries=&v=weekly"
+      defer
+    ></script>
+    <script src="https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js"></script>
+    <style type="text/css">
+    /* Always set the map height explicitly to define the size of the div
+    * element that contains the map. */
+    #map {
+        height: 100%;
+    }
+
+    /* Optional: Makes the sample page fill the window. */
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .firstHeading {
+        margin-top: 0px;
+        margin-bottom: 5px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    #content > span {
+        margin-top: 20px;
+        margin-bottom: 2px;
+        white-space: nowrap;
+    }
+    </style>
+    <script>
+    let _map;
+    let _markerClusterer;
+    let _infoWindow;
+
+    window.onmessage = (event) => {
+		if (event.data) {
+			const message = event.data;
+			switch (message.action) {
+			case "set":
+				setTrips(message.items);
+                break;
+            }
+		}
+    };
+    
+    function buildInfo(trip) {
+        const info =
+        '<div id="content">' +
+            '<div style="float: left">' + 
+                '<img src="' + trip.cover + '" width="100" align="left" style="margin-right: 10px">' +
+            '</div>' +
+            '<div style="float: left">' +
+                '<span class="firstHeading">' + trip.title + '</span><br>' +
+                '<span>' + trip.date + '</span><br>' +
+                '<a href="' + trip.location.link + '" target="_blank">' + trip.location.title + '</a>' +
+            '</div>' +
+        '</div';
+        return info;
+    }
+
+    function setTrips(trips) {
+        const markers = trips.map((trip, i) => {
+            const marker = new google.maps.Marker({
+                position: {
+                    lat: trip.location.latitude,
+                    lng: trip.location.longitude
+                },
+                icon: "https://static.wixstatic.com/media/e50527_e57f1250c77142098a1be8ee71f78144~mv2.png"
+            });
+            marker.addListener("click", () => {
+                _infoWindow.setContent(buildInfo(trip));
+                _infoWindow.open(_map, marker);
+            });
+            return marker;
+        });
+        if (_markerClusterer) {
+            _markerClusterer.clearMarkers();
+        }
+        _markerClusterer = new MarkerClusterer(_map, markers, {
+            imagePath: "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
+        });
+    }
+
+    function initMap() {
+        _infoWindow = new google.maps.InfoWindow({
+            maxWidth: 500
+        });
+        _map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 27.034349, lng: 14.407111 },
+            zoom: 2,
+        });
+    }
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>

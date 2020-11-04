@@ -1,0 +1,938 @@
+<html>
+<head>
+<script>
+	function sendMessage(msg) {
+		const wn = document.getElementById('frame').contentWindow;
+		wn.postMessage(msg, '*');
+	}
+	function add() {
+		sendMessage({
+			action: "add",
+			image: "DSC_1318.jpg",
+			ratio: 1.5
+		});
+	}
+	
+	window.onmessage = (event) => {
+		if (event.data) {
+			const message = event.data;
+			switch (message.action) {
+			case "remove":
+				console.log("new count = " + message.count);
+				break;
+			case "ready":
+				console.log("ready !!")
+				break;
+			case "export":
+				console.log("export to " + message.target + ":");
+				console.log(message.data);
+				break;
+			}
+		}
+    };
+    
+    function initLocations() {
+        sendMessage({
+            action: "set",
+            items: _locations
+        })
+    }
+    const _locations = [
+  {
+    "location": {
+      "latitude": -8.268649,
+      "_id": "d57aa0aa-03bf-4ace-b46a-14ad78b3c10a",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Tue Sep 15 2020 22:58:36 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Tue Sep 15 2020 22:59:28 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 124.401342,
+      "link": "http://www.alor-diving-kepa.com/",
+      "title": "La Petite Kepa"
+    },
+    "_id": "96c23bb8-ce66-41cd-998c-87e0fe2dcc59",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Tue Sep 15 2020 23:04:51 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:23:24 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Séjour plongée à la P'tite Kepa, au cœur de l'archipel d'Alor, à l'extrémité orientale des petites îles de la sonde",
+    "alias": "alor-2015",
+    "cover": "https://static.wixstatic.com/media/e50527_7059c1d4b3d041d796d512a7c6e74a29~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Octobre 2015",
+    "clicks": 6,
+    "title": "Alor",
+    "link-trips-title": "/destinations/alor-2015",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 38.535438,
+      "_id": "67b16bbd-22d9-4ddf-9058-eed51a4dce29",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Sep 13 2020 10:44:42 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Sep 13 2020 10:45:47 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": -28.529032,
+      "link": "http://pico-sport.com/",
+      "title": "Pico Sport"
+    },
+    "_id": "62d2665d-55f1-4d36-8446-26fd8e966aee",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sun Sep 13 2020 10:46:18 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sun Sep 20 2020 08:35:21 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Séjour plongée chez Pico Sport, à la découverte des requins bleus et des mobulas de Princesse Alice",
+    "alias": "azores-2012",
+    "cover": "https://static.wixstatic.com/media/e50527_e5d128a10dce43abacffbe79cd696377~mv2.jpg/v1/fill/w_100,h_66,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Septembre 2012",
+    "clicks": 8,
+    "title": "Les Açores",
+    "link-trips-title": "/destinations/azores-2012",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "d67f5f45-e46e-4b1d-b8d4-c9a9a414bd43",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Atlantique Nord"
+      },
+      {
+        "parent": "d67f5f45-e46e-4b1d-b8d4-c9a9a414bd43",
+        "_id": "a319f71a-00f8-4420-b580-0b62823442c9",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Açores"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -31.596479,
+      "_id": "289154c4-188d-42d8-a712-47478398bdf1",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Aug 09 2020 18:23:11 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Aug 09 2020 18:25:41 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 29.515413,
+      "title": "Port Saint Johns"
+    },
+    "_id": "95e702d7-40bd-4200-b697-3528b548c22c",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Wed Sep 02 2020 22:58:50 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Fri Oct 09 2020 15:35:59 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Expédition en Afrique du sud pour assister à l'une des plus grandes migrations animales sur terre, le Sardine Run...",
+    "alias": "sardine-run-2019",
+    "cover": "https://static.wixstatic.com/media/e50527_8b8c3815eb6d4fdc85d69d9a1d74f05e~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Juillet 2019",
+    "clicks": 10,
+    "title": "Sardine Run",
+    "link-trips-title": "/destinations/sardine-run-2019",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "parent": "0ceb4e0f-7f35-41aa-8b96-e932ad022c4d",
+        "_id": "da100ffb-b411-4ee6-9868-61079590c8c7",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Afrique Du Sud"
+      },
+      {
+        "_id": "0ceb4e0f-7f35-41aa-8b96-e932ad022c4d",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Océan indien"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 13.726597,
+      "_id": "8542a331-f553-4dd9-91aa-61605a4420d3",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Tue Aug 04 2020 23:32:21 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Tue Aug 04 2020 23:33:36 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 120.883635,
+      "title": "Aquaventure Reef Club Dive Resort"
+    },
+    "_id": "fb1fa16d-4642-4520-b00e-d570002408de",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Wed Sep 02 2020 12:44:27 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Fri Oct 16 2020 23:44:08 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Deuxième séjour plongée à Anilao, l'une des mecques de la faune macro, cette fois avec un guide de luxe, Dennis Corpuz himself",
+    "alias": "anilao-2016",
+    "cover": "https://static.wixstatic.com/media/e50527_e05be3fecd114120be3e731c7a905471~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Février 2016",
+    "clicks": 7,
+    "title": "Anilao",
+    "link-trips-title": "/destinations/anilao-2016",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "b2a659cb-a7db-4cd6-9a4b-add7e59273c9",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Philippines"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -8.604663,
+      "_id": "efc1c4a9-91c6-4774-a186-24cea798ed04",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Thu Aug 27 2020 00:26:33 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Thu Aug 27 2020 00:28:45 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 122.477826,
+      "link": "https://www.ankermi-happydive.com/",
+      "title": "Ankermi Happy Dive"
+    },
+    "_id": "2f4f4c67-850d-4a05-b752-43c4404d1f00",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sat Aug 29 2020 12:16:23 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 01:13:47 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Séjour à Maumere, sur la côte nord de l'île de Flores, pour des plongées mêlant faune macro et ambiances ultra colorées et poissoneuses",
+    "alias": "maumere-2016",
+    "cover": "https://static.wixstatic.com/media/e50527_070e492dddfb4ec0aa290593de53ba3e~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Octobre 2016",
+    "clicks": 7,
+    "title": "Maumere",
+    "link-trips-title": "/destinations/maumere-2016",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -8.273894,
+      "_id": "372ffe68-91e2-4f0b-961f-292f1b3e31c9",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Fri Apr 17 2020 22:52:09 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Fri Apr 17 2020 22:52:09 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 115.590009,
+      "link": "http://www.libertydiveresort.com/",
+      "title": "Liberty Dive Resort"
+    },
+    "_id": "0e1494d4-8fe1-4311-b9d7-8609b429ac16",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Mon Aug 24 2020 20:43:23 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Tue Oct 13 2020 03:43:17 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Pour la deuxième année consécutive, nous partons à la découverte de l'étonnante faune macroscopique de Tulamben",
+    "alias": "tulamben-2016",
+    "cover": "https://static.wixstatic.com/media/e50527_c16de05d369c4e95afefe726826103f0~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Novembre 2016",
+    "clicks": 8,
+    "title": "Tulamben",
+    "link-trips-title": "/destinations/tulamben-2016",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 15.870437,
+      "_id": "36402c79-6502-4dc4-a95b-cbc19449c0b3",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sat Aug 22 2020 17:44:04 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sat Aug 22 2020 17:45:48 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": -61.582155,
+      "link": "https://www.pisquettes.com/",
+      "title": "Les Pisquettes"
+    },
+    "_id": "afa0a1bf-48b9-43fc-8af7-b0e42d0e92a1",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sat Aug 22 2020 17:46:13 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Fri Oct 09 2020 15:28:58 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Petite semaine de plongée aux Saintes, à la découverte de la richesse des fonds-marins de l'archipel et du fameux sec Pâté",
+    "alias": "les-saintes-2015",
+    "cover": "https://static.wixstatic.com/media/e50527_b9102c351718467eb3672c65263d46f4~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Mai 2015",
+    "clicks": 7,
+    "title": "Les Saintes",
+    "link-trips-title": "/destinations/les-saintes-2015",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "d67f5f45-e46e-4b1d-b8d4-c9a9a414bd43",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Atlantique Nord"
+      },
+      {
+        "parent": "d67f5f45-e46e-4b1d-b8d4-c9a9a414bd43",
+        "_id": "99650752-8d2c-4e09-af0a-8bbef48202cc",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Sat Aug 22 2020 18:04:11 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Caraïbes"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 27.225652,
+      "_id": "14f78043-9702-4703-bb13-0d64191db8dd",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Wed Aug 19 2020 09:02:21 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Wed Aug 19 2020 09:02:43 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 33.843112,
+      "title": "Hurghada"
+    },
+    "_id": "dcb4f74c-cb6c-4571-9cc2-ec56a16fd27f",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Wed Aug 19 2020 09:04:04 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Fri Oct 09 2020 15:26:34 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Workshop de photographie sous-marine organisé par Alexander Mustard et conduit par Adam Hanlon",
+    "alias": "egypte-2016",
+    "cover": "https://static.wixstatic.com/media/e50527_37effdb6713e4359aaadaf9c876cecdd~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Juin 2016",
+    "clicks": 16,
+    "title": "Egypte",
+    "link-trips-title": "/destinations/egypte-2016",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "a99a1aa9-2bd7-4911-b574-9a633337a223",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Mer Rouge"
+      },
+      {
+        "parent": "a99a1aa9-2bd7-4911-b574-9a633337a223",
+        "_id": "eca51106-57ab-4cf8-a5f4-44c405e7bc4d",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Egypte"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 25.044236,
+      "_id": "12778e62-4663-4da4-9d00-98a80f14160e",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Aug 16 2020 17:31:03 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Aug 16 2020 17:32:28 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": -77.355183,
+      "title": "Bahamas"
+    },
+    "_id": "9a8a60b3-a36a-4917-8b2d-422de7b6cc4d",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sun Aug 16 2020 17:33:00 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Thu Oct 15 2020 11:06:38 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Expédition aux Bahamas à la rencontre du requin-tigre de tiger beach et du grand requin-marteau de Bimini",
+    "alias": "bahamas-2015",
+    "cover": "https://static.wixstatic.com/media/e50527_9cd836607d2943f090b87e5200f3fe7f~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Février 2015",
+    "clicks": 25,
+    "title": "Bahamas",
+    "link-trips-title": "/destinations/bahamas-2015",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "d67f5f45-e46e-4b1d-b8d4-c9a9a414bd43",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Atlantique Nord"
+      },
+      {
+        "parent": "d67f5f45-e46e-4b1d-b8d4-c9a9a414bd43",
+        "_id": "99650752-8d2c-4e09-af0a-8bbef48202cc",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Sat Aug 22 2020 18:04:11 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Caraïbes"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -31.596479,
+      "_id": "289154c4-188d-42d8-a712-47478398bdf1",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Aug 09 2020 18:23:11 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Aug 09 2020 18:25:41 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 29.515413,
+      "title": "Port Saint Johns"
+    },
+    "_id": "bbb11aed-a88e-4960-a79f-852222df2c96",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sun Aug 09 2020 18:26:40 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Fri Oct 09 2020 13:48:07 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Expédition en Afrique du sud pour assister à l'une des plus grandes migrations animales sur terre, le Sardine Run...",
+    "alias": "sardine-run-2017",
+    "cover": "https://static.wixstatic.com/media/e50527_2ad666c4eef74649a959da17d582ad1c~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Juillet 2017",
+    "clicks": 9,
+    "title": "Sardine Run",
+    "link-trips-title": "/destinations/sardine-run-2017",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "0ceb4e0f-7f35-41aa-8b96-e932ad022c4d",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Océan indien"
+      },
+      {
+        "parent": "0ceb4e0f-7f35-41aa-8b96-e932ad022c4d",
+        "_id": "da100ffb-b411-4ee6-9868-61079590c8c7",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Afrique Du Sud"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 13.726597,
+      "_id": "8542a331-f553-4dd9-91aa-61605a4420d3",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Tue Aug 04 2020 23:32:21 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Tue Aug 04 2020 23:33:36 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 120.883635,
+      "title": "Aquaventure Reef Club Dive Resort"
+    },
+    "_id": "5b8b9efb-9868-4a6b-849b-0ea6f846afe4",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Tue Aug 04 2020 23:34:38 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:24:01 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Retour à Anilao, pour découvrir de nouvelles créatures toujours plus étonnantes. Une faune macroscopique, voire microscopique toujours étonnante",
+    "alias": "anilao-2017",
+    "cover": "https://static.wixstatic.com/media/e50527_01e9a9cdbeb4463e8189429128de0921~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Juin 2017",
+    "clicks": 16,
+    "title": "Anilao",
+    "link-trips-title": "/destinations/anilao-2017",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "b2a659cb-a7db-4cd6-9a4b-add7e59273c9",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Philippines"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -26.840418,
+      "_id": "a8905f86-1593-4d70-9739-3872b731680e",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Thu Jul 30 2020 22:24:57 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Thu Jul 30 2020 22:25:27 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 32.887209,
+      "title": "Ponta Do Ouro"
+    },
+    "_id": "dfba5226-fde1-4cdb-b79e-1c177f8d1dd7",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Thu Jul 30 2020 22:27:21 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:24:27 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "A la rencontre des requins blouledogue de Ponta do Oura, au sud du Mozambique",
+    "alias": "mozambique-2018",
+    "cover": "https://static.wixstatic.com/media/e50527_5630c4f584c24eebbc4d4dcb52017f74~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Février 2018",
+    "clicks": 12,
+    "title": "Ponta Do Ouro",
+    "link-trips-title": "/destinations/mozambique-2018",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "0ceb4e0f-7f35-41aa-8b96-e932ad022c4d",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Océan indien"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -30.221258,
+      "_id": "ba271ab8-235a-4171-a0d2-0709daec2551",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Wed Jul 29 2020 23:48:46 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Wed Jul 29 2020 23:50:40 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 30.794179,
+      "link": "https://www.facebook.com/africanwatersports.co.za/",
+      "title": "African Watersports"
+    },
+    "_id": "6466df1e-48e7-4059-a376-3a72202dba7c",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Wed Jul 29 2020 23:52:24 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:24:56 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Un peu d'adrénaline lors de plongées au cœur d'une meute de requins bordés en compagnie de Walter Bernadis",
+    "alias": "aliwal-shoal-2018",
+    "cover": "https://static.wixstatic.com/media/e50527_c5e015fe8ba04015aa2af3b454fcc2e9~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Février 2018",
+    "clicks": 22,
+    "title": "Aliwal Shoal",
+    "link-trips-title": "/destinations/aliwal-shoal-2018",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "0ceb4e0f-7f35-41aa-8b96-e932ad022c4d",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Océan indien"
+      },
+      {
+        "parent": "0ceb4e0f-7f35-41aa-8b96-e932ad022c4d",
+        "_id": "da100ffb-b411-4ee6-9868-61079590c8c7",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Afrique Du Sud"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 19.60423,
+      "_id": "dbf20574-88d4-4473-af24-cccebb3e8d77",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sat Jul 04 2020 19:01:32 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sat Jul 04 2020 19:02:37 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 37.232492,
+      "link": "https://www.redseaexplorers.com/",
+      "title": "Red Sea Explorers"
+    },
+    "_id": "1d1bd395-91ca-4c0a-a6a0-416d1140b77f",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sat Jul 04 2020 18:50:52 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:25:29 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "A la découverte du Sud Soudan, au milieu des récifs multicolores et d'une faune aquatique abondante.",
+    "alias": "sudan-2018",
+    "cover": "https://static.wixstatic.com/media/e50527_5f9b32658e1a4f62bbbb3ef9f63938e7~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Mai 2018",
+    "clicks": 14,
+    "title": "Soudan",
+    "link-trips-title": "/destinations/sudan-2018",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "a99a1aa9-2bd7-4911-b574-9a633337a223",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Mer Rouge"
+      },
+      {
+        "parent": "a99a1aa9-2bd7-4911-b574-9a633337a223",
+        "_id": "0ac1e2ef-9b30-41d2-aac5-3a797723dead",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Sun May 03 2020 14:21:05 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Sun May 03 2020 14:21:17 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Soudan"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 13.690423,
+      "_id": "3d4c30c9-97ee-4682-bbdb-36098c1122fc",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Jun 28 2020 22:06:58 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Jun 28 2020 22:08:26 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 120.89019,
+      "link": "http://www.planetdive.com.ph/",
+      "title": "Planet Dive"
+    },
+    "_id": "2817e8e5-d63f-4bd4-9975-1d8700218363",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sun Jun 28 2020 22:09:59 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:25:45 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Retour à Anilao, pour découvrir de nouvelles créatures toujours plus étonnantes. Une faune macroscopique, voire microscopique toujours étonnante",
+    "alias": "anilao-2020",
+    "cover": "https://static.wixstatic.com/media/e50527_55ea73b80f594e25a33123bcdf049ad9~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Février 2020",
+    "clicks": 28,
+    "title": "Anilao",
+    "link-trips-title": "/destinations/anilao-2020",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "b2a659cb-a7db-4cd6-9a4b-add7e59273c9",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Philippines"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": 7.339584,
+      "_id": "fe95ad1e-6967-4b25-8638-a25cb729b436",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Jun 14 2020 22:43:37 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Jun 14 2020 22:46:08 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 134.459425,
+      "link": "https://fishnfins.com/",
+      "title": "Fish'n Fins"
+    },
+    "_id": "a09362ba-32d9-44cd-ac60-80643f01cfaa",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sun Jun 14 2020 22:46:33 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:26:12 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "A la découverte de Palau, archipel précurseur au niveau de la protection des requins",
+    "alias": "palau-2019",
+    "cover": "https://static.wixstatic.com/media/e50527_97f7789ca7134a1ab31d3e8a6ee8a29d~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Mars 2019",
+    "clicks": 15,
+    "title": "Palau",
+    "link-trips-title": "/destinations/palau-2019",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "af749d0d-79d1-4f97-bc09-8b39ce011457",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Pacifique Nord"
+      },
+      {
+        "parent": "af749d0d-79d1-4f97-bc09-8b39ce011457",
+        "_id": "651fec2b-d20f-4992-a108-3e6ef2c5781c",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Sun Jun 14 2020 22:48:05 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Sun Jun 14 2020 22:48:20 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Micronésie"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -0.889661,
+      "_id": "bfd05d2a-f27f-4bed-90f1-e03ac596f4fc",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Jun 14 2020 16:14:46 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Jun 14 2020 16:16:03 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 131.247585,
+      "link": "http://www.lambodiveandcruise.com/",
+      "title": "Lambo liveaboard"
+    },
+    "_id": "3504cba4-e502-4384-a4d7-ea664be16784",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sun Jun 14 2020 16:17:15 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Tue Sep 01 2020 17:59:40 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Croisière plongée dans le mythique archipel des Raja Ampat, du détroit de Dampier à Wayag",
+    "alias": "lambo-2017",
+    "cover": "https://static.wixstatic.com/media/e50527_0002aa2c0c6746d899ce630528e1074e~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Décembre 2017",
+    "clicks": 14,
+    "title": "Raja Ampat",
+    "link-trips-title": "/destinations/lambo-2017",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      },
+      {
+        "parent": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_id": "339a8f20-93a1-4634-b612-be9e38fa72b9",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Mon Apr 27 2020 20:24:08 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:39:57 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Raja Ampat"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -0.889661,
+      "_id": "f226845c-795f-4080-951c-9c0ce4c6f96b",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Thu May 21 2020 23:27:11 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Thu May 21 2020 23:30:31 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 131.247585,
+      "link": "https://temandivesandcruises.com/dive/raja-ampat/",
+      "title": "Teman liveaboard"
+    },
+    "_id": "294e401d-5cbe-42a0-b0c6-b7734818d966",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Thu May 21 2020 23:11:46 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Fri Oct 09 2020 15:36:46 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Croisière plongée dans l'archipel des Raja Ampat, de Misool à Wayag",
+    "alias": "teman-2018",
+    "cover": "https://static.wixstatic.com/media/e50527_4569c27ab0ea46449aacbd6a4676c83f~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Novembre 2018",
+    "clicks": 12,
+    "title": "Raja Ampat",
+    "link-trips-title": "/destinations/teman-2018",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      },
+      {
+        "parent": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_id": "339a8f20-93a1-4634-b612-be9e38fa72b9",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Mon Apr 27 2020 20:24:08 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:39:57 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Raja Ampat"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -0.50002,
+      "_id": "23b82caf-a502-4688-931f-391004c5910d",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Mon Apr 27 2020 20:17:44 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Mon Apr 27 2020 20:21:02 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 130.66576,
+      "link": "https://www.stayrajaampat.com/accommodation/corepen-homestay/",
+      "title": "Corepen Homestay"
+    },
+    "_id": "24eb98e7-e7c5-4696-ab83-5ffcecb6f999",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Mon Apr 27 2020 20:15:27 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Fri Oct 09 2020 15:44:42 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Séjour plongée chez Corepen, homestay au cœur du détroit de Dampier.",
+    "alias": "dampierstrait-2018",
+    "cover": "https://static.wixstatic.com/media/e50527_f3062a56b28a4eca85dc8f40e8496d94~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Novembre 2018",
+    "clicks": 9,
+    "title": "Détroit de Dampier",
+    "link-trips-title": "/destinations/dampierstrait-2018",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      },
+      {
+        "parent": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_id": "339a8f20-93a1-4634-b612-be9e38fa72b9",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Mon Apr 27 2020 20:24:08 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:39:57 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Raja Ampat"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -8.355274,
+      "_id": "0bce1715-0622-492c-836b-a00a04d3265d",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Sun Apr 19 2020 17:03:17 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Sun Apr 19 2020 17:06:04 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 116.07614,
+      "link": "https://giliairdivers.com/",
+      "title": "Gili Air Divers"
+    },
+    "_id": "fe7699df-220b-4f53-8baf-02311468d41b",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sun Apr 19 2020 17:02:38 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:26:29 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "A la découverte de l'ambiance festive de Gili Air et de ses fonds marins ",
+    "alias": "gili-2019",
+    "cover": "https://static.wixstatic.com/media/e50527_f3346f468bad436a89b6111b1b06fb53~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Novembre 2019",
+    "clicks": 24,
+    "title": "Gili Air",
+    "link-trips-title": "/destinations/gili-2019",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      }
+    ]
+  },
+  {
+    "location": {
+      "latitude": -8.273894,
+      "_id": "372ffe68-91e2-4f0b-961f-292f1b3e31c9",
+      "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+      "_createdDate": "Fri Apr 17 2020 22:52:09 GMT+0200 (heure d’été d’Europe centrale)",
+      "_updatedDate": "Fri Apr 17 2020 22:52:09 GMT+0200 (heure d’été d’Europe centrale)",
+      "longitude": 115.590009,
+      "link": "http://www.libertydiveresort.com/",
+      "title": "Liberty Dive Resort"
+    },
+    "_id": "ce59c2f8-1d1f-4f3f-88d2-820d1047db93",
+    "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+    "_createdDate": "Sat Apr 18 2020 17:15:14 GMT+0200 (heure d’été d’Europe centrale)",
+    "_updatedDate": "Sat Oct 17 2020 09:27:11 GMT+0200 (heure d’été d’Europe centrale)",
+    "seodesc": "Retour à Tulamben, au Liberty Dive Resort, pour profiter de sa faune macroscopique légendaire",
+    "alias": "tulamben-2019",
+    "cover": "https://static.wixstatic.com/media/e50527_2f24bdb77e534296b5b3ed4172e975cd~mv2.jpg/v1/fill/w_100,h_67,al_c,q_85,usm_0.66_1.00_0.01/dummy.jpg",
+    "date": "Novembre 2019",
+    "clicks": 34,
+    "title": "Tulamben",
+    "link-trips-title": "/destinations/tulamben-2019",
+    "link-trips-title-2": "/destinations/",
+    "link-trips-alias": "/trips/map",
+    "categories": [
+      {
+        "_id": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Asie du Sud-Est"
+      },
+      {
+        "parent": "4c9bd158-2b11-4bb3-9eda-4493088a5416",
+        "_id": "fb43153c-d94d-455b-ad64-c19497cbc8aa",
+        "_owner": "e50527a3-3d9b-4ece-bbb5-30ee689bbb3c",
+        "_createdDate": "Fri Apr 17 2020 22:47:13 GMT+0200 (heure d’été d’Europe centrale)",
+        "_updatedDate": "Thu May 21 2020 22:56:58 GMT+0200 (heure d’été d’Europe centrale)",
+        "title": "Indonésie"
+      }
+    ]
+  }
+];
+</script>
+</head>
+<body onload="initLocations()">
+<iframe id="frame" style="width: 1000px; height: 700px; resize: both;" src="googleMapsFrame.html"></iframe>
+</body>
+</html>
