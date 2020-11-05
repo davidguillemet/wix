@@ -22,17 +22,64 @@
         margin: 0;
         padding: 0;
     }
-
-    .firstHeading {
-        margin-top: 0px;
+    .locationTitle {
+        overflow: hidden;
         margin-bottom: 5px;
-        font-size: 16px;
-        font-weight: bold;
     }
-    #content > span {
-        margin-top: 20px;
-        margin-bottom: 2px;
-        white-space: nowrap;
+    .link {
+        width: 18px;
+        height: 18px;
+        float: left;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M10 6v2H5v11h11v-5h2v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6zm11-3v8h-2V6.413l-7.793 7.794-1.414-1.414L17.585 5H13V3h8z'/%3E%3C/svg%3E");
+    }
+    .linkLabel {
+        font-weight: bold;
+        font-size: 16px;
+        float: left;
+        margin-right: 10px;
+    }
+    .tripsGalery {
+        display: flex;
+        overflow-x: scroll;
+        overflow-y: hidden;
+        max-width: 310px;
+        height: auto;
+        margin-top: 5px;
+    }
+    .tripCard {
+        position: relative;
+        display: flex;
+        margin-right: 5px;
+    }
+    .tripCard:last-child {
+        margin-right: 0px;
+    }
+    .tripCover {
+        border-radius: 5px;
+    }
+    .tripDateContainer {
+        display: flex;
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        width: 100%;
+        height: 30px;
+        overflow: hidden;
+    }
+    .tripDateBg {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        background-color:white;
+        opacity: 0.3;
+    }
+    .tripDateLabel {
+        color:white;
+        opacity: 0.8;
+        font-weight: bold;
+        margin: auto;
     }
     </style>
     <script>
@@ -45,38 +92,60 @@
 			const message = event.data;
 			switch (message.action) {
 			case "set":
-				setTrips(message.items);
+				setTrips(message.items, message.coverWidth);
                 break;
             }
 		}
     };
-    
-    function buildInfo(trip) {
-        const info =
+
+    function sendMessage(msg) {
+		window.parent.postMessage(msg, "*");
+    }
+
+    function toDestination(relativeLink) {
+        sendMessage({
+            action: 'navigate',
+            link: relativeLink
+        });
+        return false;
+    }
+
+    function buildInfo(location, coverWidth) {
+        let info =
         '<div id="content">' +
-            '<div style="float: left">' + 
-                '<img src="' + trip.cover + '" width="100" align="left" style="margin-right: 10px">' +
+            '<div class="locationTitle">' + 
+                '<div class="linkLabel">' + location.title + '</div><a href="' + location.link + '" target="_blank"><div class="link"></div></a>' +
             '</div>' +
-            '<div style="float: left">' +
-                '<span class="firstHeading">' + trip.title + '</span><br>' +
-                '<span>' + trip.date + '</span><br>' +
-                '<a href="' + trip.location.link + '" target="_blank">' + trip.location.title + '</a>' +
-            '</div>' +
+            '<div class="tripsGalery">';
+
+        location.trips.forEach(trip => {
+            info += '<div class="tripCard">' +
+                        '<a href="#" onclick="toDestination(\'' + trip['link-trips-title'] + '\')">' + 
+                        '<img src="' + trip.cover + '" class="tripCover" width="' + coverWidth + 'px">' +
+                        '<div class="tripDateContainer">' +
+                            '<div class="tripDateBg"></div>' +
+                            '<div class="tripDateLabel">' + trip.date  + '</div>' +
+                        '</div>' +
+                        '</a>' +
+                    '</div>';
+        });
+
+        info += '</div>';
         '</div';
         return info;
     }
 
-    function setTrips(trips) {
-        const markers = trips.map((trip, i) => {
+    function setTrips(locations, coverWidth) {
+        const markers = locations.map(location => {
             const marker = new google.maps.Marker({
                 position: {
-                    lat: trip.location.latitude,
-                    lng: trip.location.longitude
+                    lat: location.latitude,
+                    lng: location.longitude
                 },
                 icon: "https://static.wixstatic.com/media/e50527_e57f1250c77142098a1be8ee71f78144~mv2.png"
             });
             marker.addListener("click", () => {
-                _infoWindow.setContent(buildInfo(trip));
+                _infoWindow.setContent(buildInfo(location, coverWidth));
                 _infoWindow.open(_map, marker);
             });
             return marker;
