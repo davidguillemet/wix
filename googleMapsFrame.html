@@ -26,6 +26,10 @@
         overflow: hidden;
         margin-bottom: 5px;
     }
+    .locationTitle > h2 {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
     .link {
         width: 18px;
         height: 18px;
@@ -113,6 +117,9 @@
     function buildInfo(location, coverWidth) {
         let info =
         '<div id="content">' +
+            '<div class="locationTitle">' + 
+                '<h2>' + location.trips[0].title + '</h2>' +
+            '</div>' +
             '<div class="locationTitle">' + 
                 '<div class="linkLabel">' + location.title + '</div><a href="' + location.link + '" target="_blank"><div class="link"></div></a>' +
             '</div>' +
