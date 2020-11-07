@@ -87,19 +87,32 @@
     let _map;
     let _markerClusterer;
     let _infoWindow;
+    let _coverWidth;
+    let _emptyMessageControlDiv;
+    let _emptyMessageControlIndex = -1;
+
+    const clusterOptions = {
+	    imagePath: "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
+	    averageCenter: true,
+	    gridSize: 20
+    };
 
     window.onmessage = (event) => {
 		if (event.data) {
 			const message = event.data;
 			switch (message.action) {
             case 'load':
-                loadGoogleMapApi(message.key).then(() => {
-                    initMap();
-                    setTrips(message.items, message.coverWidth);
-                });
+                if (_map) {
+                    setTrips(message.items);
+                } else {
+                    loadGoogleMapApi(message.key).then(() => {
+                        initMap(message.coverWidth, message.emptyMessage);
+                        setTrips(message.items);
+                    });
+                }
                 break;
 			case 'set':
-				setTrips(message.items, message.coverWidth);
+				setTrips(message.items);
                 break;
             }
 		}
@@ -125,7 +138,7 @@
         return false;
     }
 
-    function buildInfo(location, coverWidth) {
+    function buildInfo(location) {
         let info =
         '<div id="content">' +
             '<div class="locationTitle">' + 
@@ -139,7 +152,7 @@
         location.trips.forEach(trip => {
             info += '<div class="tripCard">' +
                         '<a href="#" onclick="toDestination(\'' + trip['link-trips-title'] + '\')">' + 
-                        '<img src="' + trip.cover + '" class="tripCover" width="' + coverWidth + 'px">' +
+                        '<img src="' + trip.cover + '" class="tripCover" width="' + _coverWidth + 'px">' +
                         '<div class="tripDateContainer">' +
                             '<div class="tripDateBg"></div>' +
                             '<div class="tripDateLabel">' + trip.date  + '</div>' +
@@ -153,7 +166,7 @@
         return info;
     }
 
-    function setTrips(locations, coverWidth) {
+    function setTrips(locations) {
         if (_markerClusterer) {
             _markerClusterer.clearMarkers();
         }
@@ -166,7 +179,7 @@
                 icon: "https://static.wixstatic.com/media/e50527_e57f1250c77142098a1be8ee71f78144~mv2.png"
             });
             marker.addListener("click", () => {
-                _infoWindow.setContent(buildInfo(location, coverWidth));
+                _infoWindow.setContent(buildInfo(location));
                 _infoWindow.open(_map, marker);
             });
             return marker;
@@ -174,19 +187,71 @@
         if (_markerClusterer) {
             _markerClusterer.clearMarkers();
         }
-        _markerClusterer = new MarkerClusterer(_map, markers, {
-            imagePath: "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
-        });
+        if (markers.length > 0) {
+            hideEmptyMessage();
+            _markerClusterer = new MarkerClusterer(_map, markers, clusterOptions);
+            _markerClusterer.fitMapToMarkers();
+        } else {
+            showEmptyMessage();
+        }
     }
 
-    function initMap() {
+    function initMap(coverWidth, emptyMessage) {
+        _coverWidth = coverWidth;
         _infoWindow = new google.maps.InfoWindow({
             maxWidth: 500
         });
         _map = new google.maps.Map(document.getElementById("map"), {
-            center: { lat: 27.034349, lng: 14.407111 },
-            zoom: 2,
+            gestureHandling: "cooperative" // For mobile device
         });
+        _emptyMessageControlDiv = document.createElement('div');
+	    const emptyMessageControl = new EmptyMessageControl(_emptyMessageControlDiv, _map, emptyMessage);
+    }
+
+    function showEmptyMessage() {
+        if (_emptyMessageControlIndex >= 0) {
+            return;
+        }
+        const newSize = _map.controls[google.maps.ControlPosition.TOP_CENTER].push(_emptyMessageControlDiv);
+        _emptyMessageControlIndex = newSize - 1;
+    }
+    function hideEmptyMessage() {
+        if (_emptyMessageControlIndex == -1) {
+            return;
+        }
+        _map.controls[google.maps.ControlPosition.TOP_CENTER].removeAt(_emptyMessageControlIndex);
+        _emptyMessageControlIndex = -1;
+    }
+
+    function EmptyMessageControl(controlDiv, map, emptyMessage) {
+
+        // Set CSS styles for the DIV containing the control
+        // Setting padding to 5 px will offset the control
+        // from the edge of the map
+        controlDiv.style.padding = '5px';
+
+        // Set CSS for the control border
+        var controlUI = document.createElement('div');
+        controlUI.style.backgroundColor = 'white';
+        controlUI.style.color = '#ffaa00';
+        controlUI.style.backgroundColor = '#ffdd99';
+        controlUI.style.borderStyle = 'solid';
+        controlUI.style.borderWidth = '1px';
+        controlUI.style.borderRadius = '5px';
+        controlUI.style.textAlign = 'center';
+        controlUI.style.padding = '5px';
+        controlDiv.appendChild(controlUI);
+
+        // Set CSS for the control interior.
+        const controlText = document.createElement("div");
+        controlText.style.color = "#cc8800";
+        controlText.style.fontFamily = "Roboto,Arial,sans-serif";
+        controlText.style.fontSize = "16px";
+        controlText.style.lineHeight = "38px";
+        controlText.style.paddingLeft = "5px";
+        controlText.style.paddingRight = "5px";
+        controlText.innerHTML = emptyMessage;
+        controlUI.appendChild(controlText);
     }
     </script>
   </head>

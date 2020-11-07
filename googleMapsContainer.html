@@ -17,15 +17,8 @@
 		if (event.data) {
 			const message = event.data;
 			switch (message.action) {
-			case "remove":
-				console.log("new count = " + message.count);
-				break;
-			case "ready":
-				console.log("ready !!")
-				break;
-			case "export":
-				console.log("export to " + message.target + ":");
-				console.log(message.data);
+			case "navigate":
+				console.log("navigate to " + message.link);
 				break;
 			}
 		}
@@ -34,17 +27,24 @@
     function loadGoogleMapsApi() {
         sendMessage({
             action: 'load',
-            key: 'Copy the API Key from GCP Console',
+            key: 'Copy API Key from google console',
             items: _locations,
-            coverWidth: 150
+            coverWidth: 150,
+            emptyMessage: "Aucune destination de correspond à votre recherche."
         })
     }
-
+    
     function setTrips() {
         sendMessage({
             action: 'set',
-            items: [_locations[1], _locations[5]],
-            coverWidth: 150
+            items: [_locations[1], _locations[5]]
+        })
+    }
+
+    function setEmptyTrips() {
+        sendMessage({
+            action: 'set',
+            items: [],
         })
     }
     
@@ -1080,8 +1080,11 @@
 ];
 </script>
 </head>
-<body onload="loadGoogleMapsApi()">
+<body>
+<button onclick="javascript:loadGoogleMapsApi()">Load</button>
 <button onclick="javascript:setTrips()">Set Trips</button>
+<button onclick="javascript:setEmptyTrips()">Set No Trips</button>
+</br>
 <iframe id="frame" style="width: 1000px; height: 700px; resize: both;" src="googleMapsFrame.html"></iframe>
 </body>
 </html>
