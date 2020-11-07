@@ -3,10 +3,7 @@
   <head>
     <title>Simple Map</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnMKt_N8Jui3YVLFEmDu057nj1OYaJoJA&callback=initMap&libraries=&v=weekly"
-      defer
-    ></script>
+    <script src="https://unpkg.com/@googlemaps/js-api-loader@1.0.0/dist/index.min.js"></script>
     <script src="https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js"></script>
     <style type="text/css">
     /* Always set the map height explicitly to define the size of the div
@@ -95,7 +92,13 @@
 		if (event.data) {
 			const message = event.data;
 			switch (message.action) {
-			case "set":
+            case 'load':
+                loadGoogleMapApi(message.key).then(() => {
+                    initMap();
+                    setTrips(message.items, message.coverWidth);
+                });
+                break;
+			case 'set':
 				setTrips(message.items, message.coverWidth);
                 break;
             }
@@ -104,6 +107,14 @@
 
     function sendMessage(msg) {
 		window.parent.postMessage(msg, "*");
+    }
+
+    function loadGoogleMapApi(apiKey) {
+        const loader = new google.maps.plugins.loader.Loader({
+            apiKey: apiKey,
+            version: "weekly"
+        });
+        return loader.load(); // Return a Promise
     }
 
     function toDestination(relativeLink) {
@@ -143,6 +154,9 @@
     }
 
     function setTrips(locations, coverWidth) {
+        if (_markerClusterer) {
+            _markerClusterer.clearMarkers();
+        }
         const markers = locations.map(location => {
             const marker = new google.maps.Marker({
                 position: {
