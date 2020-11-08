@@ -94,7 +94,7 @@
     const clusterOptions = {
 	    imagePath: "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
 	    averageCenter: true,
-	    gridSize: 20
+        gridSize: 20
     };
 
     window.onmessage = (event) => {
@@ -167,9 +167,6 @@
     }
 
     function setTrips(locations) {
-        if (_markerClusterer) {
-            _markerClusterer.clearMarkers();
-        }
         const markers = locations.map(location => {
             const marker = new google.maps.Marker({
                 position: {
@@ -190,7 +187,12 @@
         if (markers.length > 0) {
             hideEmptyMessage();
             _markerClusterer = new MarkerClusterer(_map, markers, clusterOptions);
-            _markerClusterer.fitMapToMarkers();
+            if (markers.length == 1) {
+            	_map.setZoom(8);
+                _map.panTo(markers[0].getPosition());
+            } else {
+                _markerClusterer.fitMapToMarkers();
+            }
         } else {
             showEmptyMessage();
         }
