@@ -60,6 +60,15 @@
 			data: JSON.parse(projectData)
 		});
 	}
+	function importProject_V4() {
+		// Adding ratio for each image
+		const projectData = JSON.parse('{"version":3,"images":[{"url":"DSC_1318.jpg","position":{"top":433.78125,"left":528.3125},"width":333,"height":222},{"url":"DSC_1318.jpg","position":{"top":379.78125,"left":114.3125},"width":333,"height":222},{"url":"DSC_1318.jpg","position":{"top":34.78125,"left":443.3125},"width":333,"height":222},{"url":"DSC_1318.jpg","position":{"top":0,"left":5.3125},"width":333,"height":222}],"containerWidth":1000,"border":{"color":"black","width":"4px"}}');
+		projectData.locked = true;
+		sendMessage({
+			action: 'import',
+			data: projectData
+		});
+	}
 	
 	window.onmessage = (event) => {
 		if (event.data) {
@@ -91,5 +100,6 @@
 <button onclick="javascript:setBorder('border-width', '4px')">Border width</button>
 <button onclick="javascript:importProject_V2()">Import V2</button>
 <button onclick="javascript:importProject_V3()">Import V3</button>
+<button onclick="javascript:importProject_V4()">Import V4 Locked</button>
 </body>
 </html>

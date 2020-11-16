@@ -136,6 +136,29 @@
     #buttondesc > span {
         font-family: Arial;
     }
+	#lockOverlay {
+		display: none;
+  		justify-content: center;
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		width: 100%;
+		height: 100%;
+		z-index: 100;
+	}
+	#lockWarning {
+		display: none;
+		position: absolute;
+		top: 10px;
+		margin-left: auto;
+		margin-right: auto;
+		padding: 10px 15px;
+		border: 1px solid #f5c6cb;
+		border-radius: 5px;
+		background-color: #f8d7da;
+		color: #721c24;
+		font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+	}
 	.closeIcon {
 		position: absolute;
 		top: -6px;
@@ -180,10 +203,21 @@
 	.trashIconOff {
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M17 6h5v2h-2v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8H2V6h5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3zm1 2H6v12h12V8zm-9 3h2v6H9v-6zm4 0h2v6h-2v-6zM9 4v2h6V4H9z' fill='rgba(0,0,0,0.3)'/%3E%3C/svg%3E");
 	}
+	.lockIcon {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M19 10h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h1V9a7 7 0 1 1 14 0v1zM5 12v8h14v-8H5zm6 2h2v4h-2v-4zm6-4V9A5 5 0 0 0 7 9v1h10z'/%3E%3C/svg%3E");
+	}
+	.lockIconOff { /* unlock */
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M7 10h13a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h1V9a7 7 0 0 1 13.262-3.131l-1.789.894A5 5 0 0 0 7 9v1zm-2 2v8h14v-8H5zm5 3h4v2h-4v-2z'/%3E%3C/svg%3E");
+	}
 </style>
 <script>
 $(document).ready(function() {
 
+	const ZINDEX = {
+		INACTIVE_IMAGE: 0,
+		ACTIVE_IMAGE: 10 ,
+		LOCK_OVERLAY: 100
+	};
 	let _deviceType = 'desktop';
 	let _indicatorsTimer = null;
 
@@ -207,7 +241,7 @@ $(document).ready(function() {
 				removeAll();
 			},
 			isActive: function () {
-				return getImageCount() > 0;
+				return getImageCount() > 0 && !isLocked();
 			}
 		},
 		{
@@ -218,7 +252,7 @@ $(document).ready(function() {
 				_actions.redo();
 			},
 			isActive: function () {
-				return _actions.canRedo();
+				return _actions.canRedo() && !isLocked();
 			}
 		},
 		{
@@ -229,7 +263,22 @@ $(document).ready(function() {
 				_actions.undo();
 			},
 			isActive: function () {
-				return _actions.canUndo();
+				return _actions.canUndo() && !isLocked();
+			}
+		},
+		{
+			type: 'toggle',
+			selector: "#lockunlock",
+			desc: [
+				'Verrouiller',
+				"Déverrouiller"
+			],
+			class: 'lockIcon',
+			action: function () {
+				toggleLock(this);
+			},
+			isActive: function () {
+				return isLocked() ? 1 : 0;
 			}
 		}
 	];
@@ -513,12 +562,36 @@ $(document).ready(function() {
 
 	function updateFeatureStatus() {
 		features.forEach(feature => {
-			activateFunction(feature, feature.isActive());
+			activateFunction(feature);
 		});
 	}
 			
 	function log(msg) {
 		$("#log").append("<span>&nbsp;/&nbsp;" + msg + "</span>");
+	}
+
+	function checkLocked() {
+		if (isLocked()) {
+			$("#lockWarning").stop();
+			$("#lockWarning").show(100).delay(5000).hide(100);
+			return true;
+		}
+		return false;
+	}
+
+	function isLocked() {
+		return $('#lockOverlay').css('display') === 'flex';
+	}
+
+	function toggleLock(feature) {
+		if ($('#lockOverlay').css('display') === 'flex') {
+			$("#lockWarning").stop();
+			$("#lockWarning").hide();
+			$('#lockOverlay').css('display', 'none');
+		} else {
+			$('#lockOverlay').css('display', 'flex');
+		}
+		updateFeatureStatus();
 	}
 
 	function frameSize() {
@@ -596,7 +669,7 @@ $(document).ready(function() {
 		})
 
 		$(".container").css({
-			"z-index": 0
+			"z-index": ZINDEX.INACTIVE_IMAGE
 		})
 		
 		currentImage = imageIndex;
@@ -617,7 +690,7 @@ $(document).ready(function() {
 			"background-color": activeColor
 		});
 		$(getContainerSelector(imageIndex)).css({
-			"z-index": 10
+			"z-index": ZINDEX.ACTIVE_IMAGE
 		});
 		if (_deviceType === 'mobile') {
 			// Show Active indicators for 10 Seconds
@@ -632,6 +705,10 @@ $(document).ready(function() {
 	}
 
 	function setBorder(property, newValue, actionContext) {
+
+		if (checkLocked()) {
+			return;
+		}
 
 		const prevValue = borderProperties[property];
 		borderProperties[property] = newValue;
@@ -701,13 +778,15 @@ $(document).ready(function() {
 		const project = {
 			// V 2.0 = Adding border size + color
 			// V 3.0 = Adding image height
-			version: 3.0, 
+			// V 4.0 = adding lock inforation
+			version: 4.0, 
 			images: [],
 			containerWidth: frameSize().width,
 			border: {
 				color: borderProperties["border-color"],
 				width: borderProperties["border-width"]
-			}
+			},
+			locked: isLocked()
 		};
 		const imageCount = getImageCount();
 		for (let imageIndex = 0; project.images.length < imageCount; imageIndex++) {
@@ -726,6 +805,10 @@ $(document).ready(function() {
 	}
 	
 	function importProject(projectData, clearBefore, source) {
+
+		if (checkLocked()) {
+			return;
+		}
 		
 		_actions.beginCompositeAction();
 
@@ -749,6 +832,10 @@ $(document).ready(function() {
 			addImage(imageData.normalize());
 		}
 
+		if (projectData.locked === true) { // V4
+			toggleLock();
+		}
+
 		_actions.endCompositeAction(false);
 	}
 
@@ -762,6 +849,10 @@ $(document).ready(function() {
 	}
 
 	function addImage(imageData, index) {
+		if (checkLocked()) {
+			return;
+		}
+
 		const availableSize = frameSize();
 
 		const imageIndex = index ?? getFreeIndex();
@@ -897,6 +988,10 @@ $(document).ready(function() {
 	}
 	
 	function setImage(imageData) {
+		if (checkLocked()) {
+			return;
+		}
+
 		if (currentImage === -1) {
 			addImage(imageData);
 		} else {
@@ -913,7 +1008,6 @@ $(document).ready(function() {
 
 	function showElement(show, elementSelector) {
 		const element = $(elementSelector);
-		const display = element.css('display');
 		element.css("display", show === true ? "block" : "none");
 	}
 		
@@ -1016,13 +1110,15 @@ $(document).ready(function() {
 		const toggleButton = $("#togglebutton");
 		features.forEach(feature => {
 
-			const featureButtonHtml = `<div id="${feature.selector.substring(1)}" class="toolbarbutton ${feature.class}" data-desc="${feature.desc}"></div>`;
+			const featureDesc = feature.type === 'toggle' ? feature.desc[0] : feature.desc;
+			const featureClass = feature.type === 'toggle' ? feature.class[0] : feature.class;
+			const featureButtonHtml = `<div id="${feature.selector.substring(1)}" class="toolbarbutton ${featureClass}" data-desc="${featureDesc}"></div>`;
 			$(featureButtonHtml).insertBefore(toggleButton);
 
 			const element = $(feature.selector);
 			if (_deviceType === 'desktop') {
 				element.on('mouseenter', function() {
-					$("#buttondesc > span:first-child").text($(this).attr('data-desc'));
+					setButtonDesc($(this).attr('data-desc'));
 					$("#buttondesc").stop(); // Stop possible current animation
 					$("#buttondesc").animate({ opacity: 1 }, toolbarAnimationDuration);
 				});
@@ -1069,6 +1165,10 @@ $(document).ready(function() {
 		updateFeatureStatus();
 	}
 
+	function setButtonDesc(desc) {
+		$("#buttondesc > span:first-child").text(desc);
+	}
+
     $("#togglebutton").on('vclick', patchedClickHandler(toggleToolbar));
     
 	function collapseAndHideToolbar() {
@@ -1109,18 +1209,33 @@ $(document).ready(function() {
         $("#togglebutton").removeClass("open");
         setToolbarExpanded(false);
         clearTimeout(_buttonTimer);
-    }
-    function activateFunction(feature, enable) {
-        const button = $(feature.selector);
+	}
+    function activateFunction(feature) {
+		// If the feature is a toggle, isActive() returns the index of the active action (0 or 1)
+		// Otherwise it returns a boolean (action is active or not)
+		const isToggle = feature.type === 'toggle';
+		const isActive = feature.isActive();
+		const enable = isToggle ? isActive === 0 : isActive;
+		const button = $(feature.selector);
+
         if (enable === true) {
-            button.removeClass("disabled");
+			if (isToggle ===  false) {
+				button.removeClass("disabled");
+			}
 			button.removeClass(`${feature.class}Off`);
             button.addClass(feature.class);
         } else {
-            button.addClass("disabled");
+			if (isToggle ===  false) {
+				button.addClass("disabled");
+			}
 			button.addClass(`${feature.class}Off`);
 			button.removeClass(feature.class);
-        }
+		}
+		if (isToggle === true) {
+			const toggleDesc = feature.desc[isActive];
+			button.attr('data-desc', toggleDesc);
+			setButtonDesc(toggleDesc);
+		}
     }
 
 	// Remove jQuery mobile background color 
@@ -1137,6 +1252,10 @@ $(document).ready(function() {
 </script>
 </head>
 <body>
+
+<div id="lockOverlay">
+	<div id="lockWarning">Votre simulation est verrouillée.</div>
+</div>
 
 <p id="log" style="color: black; word-break: break-all;"></p>
 
