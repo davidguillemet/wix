@@ -275,7 +275,7 @@ $(document).ready(function() {
 			],
 			class: 'lockIcon',
 			action: function () {
-				toggleLock(this);
+				toggleLock();
 			},
 			isActive: function () {
 				return isLocked() ? 1 : 0;
@@ -570,8 +570,14 @@ $(document).ready(function() {
 		$("#log").append("<span>&nbsp;/&nbsp;" + msg + "</span>");
 	}
 
-	function checkLocked() {
+	function checkLocked(func, argsArray) {
 		if (isLocked()) {
+			$("#unlockButton").off("vclick");
+			$("#unlockButton").on("vclick", function() {
+				toggleLock();
+				func.apply(null, argsArray);
+			});
+
 			$("#lockWarning").stop();
 			$("#lockWarning").show(100).delay(5000).hide(100);
 			return true;
@@ -583,7 +589,7 @@ $(document).ready(function() {
 		return $('#lockOverlay').css('display') === 'flex';
 	}
 
-	function toggleLock(feature) {
+	function toggleLock() {
 		if ($('#lockOverlay').css('display') === 'flex') {
 			$("#lockWarning").stop();
 			$("#lockWarning").hide();
@@ -707,7 +713,7 @@ $(document).ready(function() {
 
 	function setBorder(property, newValue, actionContext) {
 
-		if (checkLocked()) {
+		if (checkLocked(setBorder, [property, newValue, actionContext])) {
 			return;
 		}
 
@@ -807,7 +813,7 @@ $(document).ready(function() {
 	
 	function importProject(projectData, clearBefore, source) {
 
-		if (checkLocked()) {
+		if (checkLocked(importProject, [projectData, clearBefore, source])) {
 			return;
 		}
 		
@@ -850,7 +856,11 @@ $(document).ready(function() {
 	}
 
 	function addImage(imageData, index) {
-		if (checkLocked()) {
+
+		console.log("addImage");
+		console.log(addImage.arguments);
+
+		if (checkLocked(addImage, [imageData, index])) {
 			return;
 		}
 
@@ -989,7 +999,7 @@ $(document).ready(function() {
 	}
 	
 	function setImage(imageData) {
-		if (checkLocked()) {
+		if (checkLocked(setImage, [imageData])) {
 			return;
 		}
 
@@ -1255,7 +1265,10 @@ $(document).ready(function() {
 <body>
 
 <div id="lockOverlay">
-	<div id="lockWarning">Votre simulation est verrouillée.</div>
+	<div id="lockWarning">
+		Votre simulation est verrouillée.<br>
+		<button id="unlockButton">Déverrouiller et Exécuter</button>
+	</div>
 </div>
 
 <p id="log" style="color: black; word-break: break-all;"></p>
