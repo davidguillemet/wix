@@ -41,6 +41,13 @@
         })
     }
 
+    function setSingleLocation() {
+        sendMessage({
+            action: 'set',
+            items: [_locations[1]]
+        })
+    }
+
     function setEmptyTrips() {
         sendMessage({
             action: 'set',
@@ -1083,6 +1090,7 @@
 <body>
 <button onclick="javascript:loadGoogleMapsApi()">Load</button>
 <button onclick="javascript:setTrips()">Set Trips</button>
+<button onclick="javascript:setSingleLocation()">Set Single Location</button>
 <button onclick="javascript:setEmptyTrips()">Set No Trips</button>
 </br>
 <iframe id="frame" style="width: 1000px; height: 700px; resize: both;" src="googleMapsFrame.html"></iframe>
