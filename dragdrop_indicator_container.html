@@ -523,7 +523,8 @@ $(document).ready(function() {
 
 	const ActionContext = {
 		FROM_MESSAGE: 0,
-		FROM_UNDO_REDO: 1
+		FROM_UNDO_REDO: 1,
+		FROM_RESIZE: 2
 	}
 
 	window.onmessage = (event) => {
@@ -612,7 +613,7 @@ $(document).ready(function() {
 	const handleSize = 10;
 	const borderProperties = [];
 	borderProperties['border-color'] = 'white';
-	borderProperties['border-width'] = '2px';
+	borderProperties['border-width'] = 2;
 	const activeColor = "#66f542";
 	const inactiveColor = "#666"
 
@@ -711,18 +712,40 @@ $(document).ready(function() {
 		}
 	}
 
+	function getCssBorderProperty(property, value) {
+		const propValue = borderProperties[property];
+		let cssValue = {
+			raw: propValue,
+			css: propValue
+		};
+		switch (property) {
+			case 'border-width':
+			// the stored border width is a numnber
+			// If it not zero, it should at least be 1
+			let rawValue = propValue === 0 ? 0 : Math.max(1, Math.round(propValue));
+			cssValue.raw = rawValue;
+			cssValue.css = rawValue + 'px';
+			break;
+		}
+		return cssValue;
+	}
+
 	function setBorder(property, newValue, actionContext) {
 
-		if (checkLocked(setBorder, [property, newValue, actionContext])) {
+		// We can change the border size on resize while being locked
+		if (actionContext != ActionContext.FROM_RESIZE && checkLocked(setBorder, [property, newValue, actionContext])) {
 			return;
 		}
 
 		const prevValue = borderProperties[property];
 		borderProperties[property] = newValue;
-		$("[id^=image]").css(property, newValue);
+		const newCssValue = getCssBorderProperty(property);
+		$("[id^=image]").css(property, newCssValue.css);
 		
-		if (actionContext != ActionContext.FROM_UNDO_REDO) {
-			// Don't create an action if we are processing an undo or redo action
+		if (actionContext != ActionContext.FROM_UNDO_REDO && actionContext != ActionContext.FROM_RESIZE) {
+			// Don't create an action if:
+			// - we are processing an undo or redo action
+			// - we set the border size after a resize event
 			_actions.addAction(new BorderAction(property, prevValue, newValue));
 		}
 		
@@ -731,7 +754,7 @@ $(document).ready(function() {
 			sendMessage({
 				action: 'border',
 				property: property,
-				value: newValue
+				value: newCssValue.raw // Send the transformed value to the parent frame = the real css raw value
 			});
 		}
 	}
@@ -786,7 +809,8 @@ $(document).ready(function() {
 			// V 2.0 = Adding border size + color
 			// V 3.0 = Adding image height
 			// V 4.0 = adding lock inforation
-			version: 4.0, 
+			// V 5.0 = store border width as number
+			version: 5.0, 
 			images: [],
 			containerWidth: frameSize().width,
 			border: {
@@ -826,9 +850,17 @@ $(document).ready(function() {
 		if (projectData.version >= 2) {
 			// Adding border color/width in V2
 			setBorder("border-color", projectData.border.color);
-			const width = parseInt(projectData.border.width);
-			if (!isNaN(width)) {
-				setBorder("border-width", projectData.border.width);
+			const borderWidth = 
+				projectData.version < 5 ?
+				Number(parseInt(projectData.border.width)) : // Was stored as css property, e.g. '5px', before v5
+				projectData.border.width;
+			
+			if (!isNaN(borderWidth)) {
+				// Scale the value
+				const normalizer = new NormalizeBase(projectData.containerWidth);
+				const scaledBorderWidth = normalizer.normalize(borderWidth);
+
+				setBorder("border-width", scaledBorderWidth);
 			}
 		}
 		
@@ -931,8 +963,8 @@ $(document).ready(function() {
 		
 		$(imageSelector).css({
 			"box-shadow": shadowSize + "px " + shadowSize + "px " + shadowSize + "px #999999",
-			"border-width": borderProperties["border-width"],
-			"border-color": borderProperties["border-color"],
+			"border-width": getCssBorderProperty("border-width").css,
+			"border-color": getCssBorderProperty("border-color").css,
 			"border-style": "solid"
 		});
 		$(indicatorContainerSelector).css({
@@ -1044,6 +1076,12 @@ $(document).ready(function() {
 		const scale = initialFrameWidth / currentFrameWidth;
 		const animationDuration = 200;
 		
+		// "border" : { "color": "black", "width": 4.5677 }
+		const currentBorderWidth = borderProperties['border-width'];
+		if (currentBorderWidth > 0) {
+			setBorder('border-width', currentBorderWidth / scale, ActionContext.FROM_RESIZE);
+		}
+
 		const imageCount = getImageCount();
 		let resizeCount = 0;
 		for (let imageIndex = 0; resizeCount < imageCount; imageIndex++) {
