@@ -855,6 +855,59 @@ $(document).ready(function() {
 		};
 	}
 
+	const MAGNETIC_DISTANCS = 5;
+	const MAGNETIC_THRESHOLD = 30;
+
+	function checkMagneticLeft(ui, otherElement) {
+		// Align left side with right side of other image
+		const otherPosition = otherElement.position();
+		const left2RightDistance = Math.abs(ui.position.left - otherPosition.left - otherElement.width());
+		const leftToLeftDistance = Math.abs(ui.position.left - otherPosition.left);
+
+		if (left2RightDistance <= MAGNETIC_THRESHOLD && left2RightDistance < leftToLeftDistance) {
+			ui.position.left = otherPosition.left + otherElement.width() + MAGNETIC_DISTANCS;
+		}
+		else if (leftToLeftDistance <= MAGNETIC_THRESHOLD) {
+			ui.position.left = otherPosition.left;
+		}
+	}
+
+	function checkMagnetic(event, ui) {
+		if (event.shiftKey) {
+			const imageCount = getImageCount();
+			let index = 0;
+			let checkedImages = 0;
+			while (checkedImages < imageCount) {
+				const container = $(getContainerSelector(index++));
+				if (container.length === 0) {
+					continue;
+				}
+				checkedImages++;
+				if (container.attr('id') === ui.helper.attr('id')) {
+					continue;
+				}
+
+				const containerPosition = container.position();
+				// Align left sode with right side of other image
+				checkMagneticLeft(ui, container);
+
+				///////////////////////////////
+				// TODO : check which image is the closest before aligning the image woth the current one
+				// - for the top or bottom sides
+				// - for the right and left sides
+				///////////////////////////////
+
+				// Check Right side:
+				const rightSideDistance = Math.abs(containerPosition.left - ui.position.left - ui.helper.width());
+				if (rightSideDistance <= MAGNETIC_THRESHOLD) {
+					ui.position.left = containerPosition.left - MAGNETIC_DISTANCS - ui.helper.width();
+				}
+
+				// Check 
+			}
+		}
+	}
+
 	function addImage(imageData, index) {
 
 		console.log("addImage");
@@ -973,6 +1026,9 @@ $(document).ready(function() {
 			},
 			stop: function (event, ui) {
 				_actions.addAction(new DragAction(containerSelector));
+			},
+			drag: function( event, ui ) {
+				checkMagnetic(event, ui);
 			}
 	    });
 
@@ -1043,7 +1099,7 @@ $(document).ready(function() {
 		const currentFrameWidth = $("body").width();
 		const scale = initialFrameWidth / currentFrameWidth;
 		const animationDuration = 200;
-		
+
 		const imageCount = getImageCount();
 		let resizeCount = 0;
 		for (let imageIndex = 0; resizeCount < imageCount; imageIndex++) {
