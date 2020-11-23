@@ -283,15 +283,15 @@ $(document).ready(function() {
 		}
 	];
 
-	function NormalizeBase(referenceWidth) {
+	function Normalizer(referenceWidth) {
 		this.referenceWidth = referenceWidth ?? frameSize().width;
 	}
-	NormalizeBase.prototype.normalize = function(value) {
+	Normalizer.prototype.normalize = function(value) {
 		return value * frameSize().width / this.referenceWidth;
 	}
 
 	function ImageData(dataOrIndex, referenceWidth) {
-		NormalizeBase.call(this, referenceWidth);
+		Normalizer.call(this, referenceWidth);
 
 		if (dataOrIndex instanceof Object) {
 			// The input parameter is an object containing the image data
@@ -312,15 +312,15 @@ $(document).ready(function() {
 			}
 		}
 	};
-	ImageData.prototype = Object.create(NormalizeBase.prototype);
+	ImageData.prototype = Object.create(Normalizer.prototype);
 	ImageData.prototype.normalize = function() {
 		return {
 			...this.data,
 			position: {
-				top: NormalizeBase.prototype.normalize.call(this, this.data.position.top),
-				left: NormalizeBase.prototype.normalize.call(this, this.data.position.left)
+				top: Normalizer.prototype.normalize.call(this, this.data.position.top),
+				left: Normalizer.prototype.normalize.call(this, this.data.position.left)
 			},
-			width: NormalizeBase.prototype.normalize.call(this, this.data.width)
+			width: Normalizer.prototype.normalize.call(this, this.data.width)
 		}
 	}
 	ImageData.fromUrl = function(url) {
@@ -330,10 +330,10 @@ $(document).ready(function() {
 	};
 
 	function Action(selector) {
-		NormalizeBase.call(this);
+		Normalizer.call(this);
 		this.selector = selector;
 	};
-	Action.prototype = Object.create(NormalizeBase.prototype);
+	Action.prototype = Object.create(Normalizer.prototype);
 	Action.prototype.getElement = function() {
 		return $(this.selector);
 	}
@@ -857,7 +857,7 @@ $(document).ready(function() {
 			
 			if (!isNaN(borderWidth)) {
 				// Scale the value
-				const normalizer = new NormalizeBase(projectData.containerWidth);
+				const normalizer = new Normalizer(projectData.containerWidth);
 				const scaledBorderWidth = normalizer.normalize(borderWidth);
 
 				setBorder("border-width", scaledBorderWidth);
@@ -887,28 +887,108 @@ $(document).ready(function() {
 		};
 	}
 
-	const MAGNETIC_DISTANCS = 5;
-	const MAGNETIC_THRESHOLD = 30;
+	function Magnetizer(dragEventUi) {
+		const normalizer = new Normalizer(1000);
+		this.magneticTrigger = normalizer.normalize(Magnetizer.MAGNETIC_TRIGGER);
+		this.magneticDistance = normalizer.normalize(Magnetizer.MAGNETIC_DISTANCE);
+		this.horizontalConfig = {
+			position: dragEventUi.position.left,
+			size: dragEventUi.helper.width()
+		};
+		this.verticalConfig = {
+			position: dragEventUi.position.top,
+			size: dragEventUi.helper.height()
+		};
+	}
 
-	function checkMagneticLeft(ui, otherElement) {
-		// Align left side with right side of other image
-		const otherPosition = otherElement.position();
-		const left2RightDistance = Math.abs(ui.position.left - otherPosition.left - otherElement.width());
-		const leftToLeftDistance = Math.abs(ui.position.left - otherPosition.left);
+	// Magnetic parameters for 1000 pixels.
+	Magnetizer.MAGNETIC_DISTANCE = 5;
+	Magnetizer.MAGNETIC_TRIGGER = 30;
 
-		if (left2RightDistance <= MAGNETIC_THRESHOLD && left2RightDistance < leftToLeftDistance) {
-			ui.position.left = otherPosition.left + otherElement.width() + MAGNETIC_DISTANCS;
+	Magnetizer.prototype.checkVerticalMagnetism = function(otherElement) {
+		return this.checkMagnetism(this.verticalConfig, {
+			position: otherElement.position().top,
+			size: otherElement.height()
+		});
+	}
+	Magnetizer.prototype.checkHorizontalMagnetism = function(otherElement) {
+		return this.checkMagnetism(this.horizontalConfig, {
+			position: otherElement.position().left,
+			size: otherElement.width()
+		});
+	}
+	Magnetizer.prototype.checkMagnetism = function(dragElement, otherElement) {
+
+		// Try to align left (resp. top) side with right (resp. bottom) side of other image
+		const left2RightDistance = Math.abs(dragElement.position - otherElement.position - otherElement.size);
+		// Try to align left (resp. top) side with left (resp. top) side of other image
+		const leftToLeftDistance = Math.abs(dragElement.position - otherElement.position);
+		// Try to align right (resp. bottom) side with left (resp. top) side of other image
+		const rightToLeftDistance = Math.abs(otherElement.position - dragElement.position - dragElement.size);
+		// Try to align right (resp. bottom) side with right (resp. top) side of other image
+		const rightToRightDistance = Math.abs(dragElement.position + dragElement.size - otherElement.position - otherElement.size);
+
+		const distances = [left2RightDistance, leftToLeftDistance, rightToLeftDistance, rightToRightDistance];
+		const minIndex = distances.reduce((minValueIndex, currentValue, currentIndex) => {
+			return currentValue < distances[minValueIndex] ? currentIndex : minValueIndex;
+		}, 0);
+	
+		if (distances[minIndex] > this.magneticTrigger) {
+			return null;
 		}
-		else if (leftToLeftDistance <= MAGNETIC_THRESHOLD) {
-			ui.position.left = otherPosition.left;
+
+		let newDragPosition = null;
+
+		switch (minIndex) {
+			case 0: // left2RightDistance
+				newDragPosition = otherElement.position + otherElement.size + this.magneticDistance;
+				break;
+			case 1: // leftToLeftDistance
+				newDragPosition = otherElement.position;
+				break;
+			case 2: // rightToLeftDistance
+				newDragPosition = otherElement.position - this.magneticDistance - dragElement.size;
+				break;
+			case 3: // rightToRightDistance
+				newDragPosition = otherElement.position + otherElement.size - dragElement.size;
+				break;
 		}
+
+		return newDragPosition;
+	}
+
+	function getClosestPosition(refPosition, possiblePositions) {
+		let finalPosition = null;
+		let minDelta = Number.MAX_VALUE;
+		possiblePositions.forEach(currentPosition => {
+			if (currentPosition === null) {
+				return;
+			}
+			if (finalPosition === null) {
+				finalPosition = currentPosition;
+				minDelta = Math.abs(refPosition - currentPosition);
+			} else {
+				const currentDelta = Math.abs(refPosition - currentPosition);
+				if (currentDelta < minDelta) {
+					minDelta = currentDelta;
+					finalPosition = currentPosition;
+				}
+			}
+		});
+		return finalPosition;
 	}
 
 	function checkMagnetic(event, ui) {
 		if (event.shiftKey) {
+			const magnetizer = new Magnetizer(ui);
+
 			const imageCount = getImageCount();
 			let index = 0;
 			let checkedImages = 0;
+
+			const leftPossibilities = [];
+			const topPossibilities = [];
+
 			while (checkedImages < imageCount) {
 				const container = $(getContainerSelector(index++));
 				if (container.length === 0) {
@@ -919,23 +999,20 @@ $(document).ready(function() {
 					continue;
 				}
 
-				const containerPosition = container.position();
-				// Align left sode with right side of other image
-				checkMagneticLeft(ui, container);
+				// Align left side with right/left side of other image
+				leftPossibilities.push(magnetizer.checkHorizontalMagnetism(container));
+				// Align top side with top/bottom side of other image
+				topPossibilities.push(magnetizer.checkVerticalMagnetism(container));
+			}
 
-				///////////////////////////////
-				// TODO : check which image is the closest before aligning the image woth the current one
-				// - for the top or bottom sides
-				// - for the right and left sides
-				///////////////////////////////
+			const finalLeftPosition = getClosestPosition(ui.position.left, leftPossibilities);
+			const finalTopPosition = getClosestPosition(ui.position.top, topPossibilities);
 
-				// Check Right side:
-				const rightSideDistance = Math.abs(containerPosition.left - ui.position.left - ui.helper.width());
-				if (rightSideDistance <= MAGNETIC_THRESHOLD) {
-					ui.position.left = containerPosition.left - MAGNETIC_DISTANCS - ui.helper.width();
-				}
-
-				// Check 
+			if (finalLeftPosition !== null) {
+				ui.position.left = finalLeftPosition;
+			}
+			if (finalTopPosition !== null) {
+				ui.position.top = finalTopPosition;
 			}
 		}
 	}
@@ -988,7 +1065,6 @@ $(document).ready(function() {
 		})
 
 		// Configure events
-		//let _lastEventTimestamp;
 		if (_deviceType === 'mobile') {
 			$(`${indicatorContainerSelector}, ${imageSelector}`).on('vclick', patchedClickHandler(function(event) {
 				if (currentImage === imageIndex) {
@@ -1054,6 +1130,7 @@ $(document).ready(function() {
 			cancel: handleSelector,
 			containment: "parent",
 			start: function (event, ui) {
+				setActiveImage(imageIndex);
 				DragAction.prepareAction(containerSelector)
 			},
 			stop: function (event, ui) {
