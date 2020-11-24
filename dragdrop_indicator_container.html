@@ -1220,6 +1220,10 @@ $(document).ready(function() {
 
 	function resizeAll() {
 		const currentFrameWidth = $("body").width();
+		if (initialFrameWidth === 0) {
+			initialFrameWidth = currentFrameWidth;
+			return;
+		}
 		const scale = initialFrameWidth / currentFrameWidth;
 		const animationDuration = 200;
 
