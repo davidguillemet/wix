@@ -591,15 +591,22 @@ $(document).ready(function() {
 	}
 
 	function toggleLock() {
+		let lIsLocked;
 		if ($('#lockOverlay').css('display') === 'flex') {
 			$("#lockWarning").stop();
 			$("#lockWarning").hide();
 			$('#lockOverlay').css('display', 'none');
+			lIsLocked = false;
 		} else {
 			$('#lockOverlay').css('display', 'flex');
+			lIsLocked = true;
 		}
 		updateFeatureStatus();
 		exportProject("save");
+		sendMessage({
+			action: 'lock',
+			isLocked: lIsLocked
+		})
 	}
 
 	function frameSize() {
@@ -733,8 +740,15 @@ $(document).ready(function() {
 	function setBorder(property, newValue, actionContext) {
 
 		// We can change the border size on resize while being locked
-		if (actionContext != ActionContext.FROM_RESIZE && checkLocked(setBorder, [property, newValue, actionContext])) {
-			return;
+		if (actionContext != ActionContext.FROM_RESIZE) {
+			// If the action is launched from wix (FROM_MESSAGE), the border has not been updated yet since locked.
+			// Then, if we execute the action again after unlock, we have to send a message back to the parent
+			// -> set the action context as null instead of FROM_MESSAGE
+			// -> don't modify the action context otherwise
+			const forwardActionContext = actionContext === ActionContext.FROM_MESSAGE ? null : actionContext;
+			if (checkLocked(setBorder, [property, newValue, forwardActionContext])) {
+				return;
+			}
 		}
 
 		const prevValue = borderProperties[property];
